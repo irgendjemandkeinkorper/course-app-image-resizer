@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course App Resizer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f3;--surface:#fff;
+  --border:rgba(0,0,0,0.12);--border-med:rgba(0,0,0,0.22);
+  --text:#1a1a18;--text-muted:#6b6b67;--text-hint:#9b9b96;
+  --radius:10px;--radius-sm:6px;
+  --blue:#1a6fcc;--blue-bg:#e8f1fb;
+  --warn:#a05a00;--warn-bg:#fef3e0;
+  --success:#1a6b3c;--accent:#2563eb;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--surface:#2a2a28;
+  --border:rgba(255,255,255,0.1);--border-med:rgba(255,255,255,0.2);
+  --text:#f0f0ec;--text-muted:#a0a09a;--text-hint:#6a6a64;
+  --blue:#5b9fef;--blue-bg:#1a2a40;
+  --warn:#e09040;--warn-bg:#2a1f0a;--success:#4daa70;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── Header ── */
+header{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:10;flex-wrap:wrap}
+.h-brand{display:flex;align-items:center;gap:10px;padding:13px 0;margin-right:24px;flex-shrink:0}
+header h1{font-size:15px;font-weight:600;white-space:nowrap}
+.h-course{display:flex;align-items:center;gap:8px;padding:10px 0;margin-right:20px;border-right:0.5px solid var(--border);padding-right:20px}
+.h-course label{font-size:12px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
+.h-course input{font-size:13px;padding:5px 9px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);width:200px;outline:none}
+.h-course input:focus{border-color:var(--accent)}
+.h-course input::placeholder{color:var(--text-hint)}
+.tabs{display:flex;gap:0;height:100%}
+.tab-btn{font-size:13px;padding:16px 17px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+
+/* ── Layout ── */
+.page{display:none}.page.active{display:block}
+.main{max-width:1100px;margin:0 auto;padding:20px 20px 60px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.card-title{font-size:12px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+
+/* ── Upload zones ── */
+.upload-zone{border:1.5px dashed var(--border-med);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;position:relative;transition:background .15s,border-color .15s}
+.upload-zone:hover{background:var(--bg);border-color:var(--accent)}
+.upload-zone.has-file{border-style:solid;border-color:var(--border)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone .ico{font-size:24px;margin-bottom:6px}
+.upload-zone p{font-size:13px;color:var(--text-muted)}
+.upload-zone.has-file p{color:var(--text);font-weight:500}
+.preview-thumb{width:100%;height:72px;object-fit:contain;margin-bottom:6px;border-radius:4px}
+
+/* ── Controls ── */
+.ctrl-group{margin-top:12px}
+.ctrl-label{font-size:12px;color:var(--text-muted);margin-bottom:5px}
+.slider-row{display:flex;align-items:center;gap:8px}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
+.num-box{width:50px;flex-shrink:0;padding:3px 5px;font-size:12px;text-align:center;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text);-moz-appearance:textfield}
+.num-box::-webkit-inner-spin-button,.num-box::-webkit-outer-spin-button{-webkit-appearance:none}
+.num-box:focus{outline:none;border-color:var(--accent)}
+.unit{font-size:11px;color:var(--text-hint);flex-shrink:0}
+.swatch-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.swatch-row label{font-size:12px;color:var(--text-muted);min-width:90px}
+input[type=color]{width:36px;height:28px;border:0.5px solid var(--border-med);border-radius:4px;cursor:pointer;padding:2px;background:var(--surface)}
+.dir-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dir-btn{font-size:11px;padding:4px 8px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:transparent;color:var(--text-muted);cursor:pointer;transition:all .1s}
+.dir-btn.active,.dir-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── Fit mode toggle ── */
+.fit-toggle{display:flex;gap:0;margin-top:10px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);overflow:hidden;width:fit-content}
+.fit-btn{font-size:11px;padding:4px 10px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:all .1s;white-space:nowrap}
+.fit-btn.active{background:var(--accent);color:#fff}
+.fit-pad-color{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--text-muted)}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:6px 8px;color:var(--text-muted);border-bottom:0.5px solid var(--border);font-weight:400;white-space:nowrap}
+td{padding:5px 8px;border-bottom:0.5px solid var(--border)}
+tr.active-row td{background:var(--blue-bg)}
+tr:hover td{background:var(--bg);cursor:pointer}
+.fname-input{width:100%;padding:3px 6px;font-size:12px;border:0.5px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)}
+.fname-input:focus{outline:none;border-color:var(--accent)}
+.ext{color:var(--text-hint);font-size:11px}
+.badge-warn{font-size:10px;padding:1px 5px;border-radius:3px;background:var(--warn-bg);color:var(--warn);border:0.5px solid var(--warn);margin-left:4px;vertical-align:middle}
+
+/* ── Preview ── */
+.preview-area{background:var(--bg);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;min-height:200px;overflow:hidden;margin-top:12px;position:relative}
+.preview-area canvas{display:block;max-width:100%;max-height:280px;border-radius:4px}
+.preview-label{position:absolute;bottom:8px;left:8px;font-size:11px;background:rgba(0,0,0,.55);color:#fff;padding:2px 7px;border-radius:3px}
+.no-img{font-size:13px;color:var(--text-hint);text-align:center;padding:2rem}
+
+/* ── Action bar ── */
+.action-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font-size:13px;padding:7px 14px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:transparent;color:var(--text);cursor:pointer;transition:background .1s;white-space:nowrap}
+button:hover{background:var(--bg)}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.38;cursor:default;transform:none}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:hover{opacity:.88}
+button.primary:disabled{opacity:.38}
+button.danger{color:#c0392b;border-color:rgba(192,57,43,0.3)}
+button.danger:hover{background:rgba(192,57,43,0.08)}
+.status-bar{font-size:12px;color:var(--text-muted);min-height:20px;margin-top:6px}
+.status-bar.ok{color:var(--success)}
+.status-bar.working{color:var(--blue)}
+.progress-wrap{width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:6px;display:none}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .15s;width:0%}
+.note{font-size:12px;color:var(--warn);background:var(--warn-bg);border:0.5px solid var(--warn);border-radius:var(--radius-sm);padding:8px 12px;margin-top:10px;display:none}
+.info-note{font-size:12px;color:var(--blue);background:var(--blue-bg);border:0.5px solid rgba(26,111,204,0.3);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px}
+
+/* ── Templates card ── */
+.templates-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+.templates-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.templates-header h3{font-size:12px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px}
+.templates-chevron{font-size:11px;color:var(--text-hint);transition:transform .2s}
+.templates-chevron.open{transform:rotate(180deg)}
+.templates-body{margin-top:12px}
+.template-save-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.template-name-input{flex:1;padding:6px 10px;font-size:13px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none}
+.template-name-input:focus{border-color:var(--accent)}
+.template-name-input::placeholder{color:var(--text-hint)}
+.template-list{display:flex;flex-direction:column;gap:6px}
+.template-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:0.5px solid var(--border)}
+.template-item-name{flex:1;font-size:13px;font-weight:500}
+.template-item-meta{font-size:11px;color:var(--text-hint)}
+.template-empty{font-size:12px;color:var(--text-hint);text-align:center;padding:16px}
+
+/* ── Icon/Logo tab ── */
+.icon-previews{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.icon-preview-box{background:var(--bg);border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:8px}
+.icon-canvas-wrap{display:flex;align-items:center;justify-content:center}
+.icon-canvas-wrap canvas{border-radius:4px;border:0.5px solid var(--border)}
+.icon-dim-label{font-size:11px;color:var(--text-muted)}
+
+/* ── Crop tab ── */
+.crop-frame{position:relative;overflow:hidden;border:2px solid var(--accent);border-radius:4px;cursor:grab;background:#111}
+.crop-frame.dragging{cursor:grabbing}
+.crop-frame canvas{display:block;position:absolute;top:0;left:0;pointer-events:none}
+.crop-hint{font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center}
+.crop-no-img{font-size:13px;color:var(--text-hint);text-align:center;padding:3rem 1rem}
+
+/* ── Icon included indicator ── */
+.icon-included{font-size:11px;color:var(--success);display:flex;align-items:center;gap:4px}
+.icon-not-included{font-size:11px;color:var(--text-hint);display:flex;align-items:center;gap:4px}
+
+@media(max-width:640px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .icon-previews{grid-template-columns:1fr}
+  header{flex-direction:column;align-items:stretch}
+  .h-brand{padding:12px 16px;margin-right:0}
+  .h-course{padding:10px 16px;margin-right:0;border-right:none;border-bottom:0.5px solid var(--border)}
+  .h-course input{width:100%}
+  .tabs{overflow-x:auto}
+  .tab-btn{padding:12px 14px}
+}
+.upload-zone.drag-over{background:var(--blue-bg)!important;border-color:var(--accent)!important;border-style:solid!important}
+.upload-zone.has-error{border-color:#c0392b!important;border-style:solid!important}
+.upload-zone.has-error p{color:#c0392b}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-brand">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="2" width="16" height="16" rx="4" fill="#2563eb"/>
+      <rect x="5" y="8" width="10" height="1.5" rx=".75" fill="white"/>
+      <rect x="5" y="11" width="7" height="1.5" rx=".75" fill="white"/>
+      <rect x="5" y="5" width="4" height="1.5" rx=".75" fill="white"/>
+    </svg>
+    <h1>Course App Resizer</h1>
+  </div>
+  <div class="h-course">
+    <label for="courseNameInput">Course</label>
+    <input type="text" id="courseNameInput" placeholder="e.g. Pebble Beach" maxlength="60" autocomplete="off">
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="splash">Splash screens</button>
+    <button class="tab-btn" data-tab="icons">App icon &amp; logo</button>
+    <button class="tab-btn" data-tab="crop">Header crop</button>
+  </nav>
+</header>
+
+<!-- ════════════════════════════════════════════
+     TAB 1 — SPLASH SCREENS
+════════════════════════════════════════════ -->
+<div class="page active" id="tab-splash">
+<div class="main">
+
+  <!-- Templates -->
+  <div class="templates-card" id="templatesCard">
+    <div class="templates-header" id="templatesToggle">
+      <h3>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="opacity:.6"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+        Saved templates
+      </h3>
+      <span class="templates-chevron" id="templatesChevron">▼</span>
+    </div>
+    <div class="templates-body" id="templatesBody" style="display:none">
+      <div class="template-save-row">
+        <input class="template-name-input" type="text" id="templateNameInput" placeholder="Template name, e.g. dark-bg-small-logo" maxlength="60">
+        <button id="templateSaveBtn">Save current settings</button>
+        <button id="templateExportBtn" title="Export all templates as a JSON file">Export JSON</button>
+        <button id="templateImportBtn" title="Import templates from a JSON file">Import JSON</button>
+        <input type="file" accept=".json,application/json" id="templateImportInput" style="display:none" aria-hidden="true">
+      </div>
+      <div class="template-list" id="templateList"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Background image</div>
+      <div class="upload-zone" id="bgZone">
+        <input type="file" accept="image/*" id="bgInput">
+        <div id="bgContent"><div class="ico">🏌️</div><p>Click or drop golf course photo</p></div>
+      </div>
+      <!-- Fit mode -->
+      <div class="ctrl-group">
+        <div class="ctrl-label">Image fit</div>
+        <div class="fit-toggle">
+          <button class="fit-btn active" id="splashFillBtn" title="Scale image to fill canvas, cropping edges">Fill (cover)</button>
+          <button class="fit-btn" id="splashFitBtn" title="Scale image to fit inside canvas with padding">Fit (letterbox)</button>
+        </div>
+        <div class="fit-pad-color" id="splashPadRow" style="display:none">
+          <span>Padding color</span>
+          <input type="color" id="splashPadColor" value="#ffffff" aria-label="Splash padding color">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Logo overlay</div>
+      <div class="upload-zone" id="logoZone">
+        <input type="file" accept="image/*" id="logoInput">
+        <div id="logoContent"><div class="ico">⛳</div><p>Click or drop logo (PNG recommended)</p></div>
+      </div>
+      <div id="logoControls" style="display:none">
+        <div class="ctrl-group">
+          <div class="ctrl-label">Logo size</div>
+          <div class="slider-row">
+            <input type="range" id="logoSize" min="5" max="80" value="25" step="1">
+            <input type="number" class="num-box" id="logoSizeN" min="5" max="80" value="25">
+            <span class="unit">%</span>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Horizontal position</div>
+          <div class="slider-row">
+            <input type="range" id="logoPosX" min="0" max="100" value="50" step="1">
+            <input type="number" class="num-box" id="logoPosXN" min="0" max="100" value="50">
+            <span class="unit">%</span>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Vertical position</div>
+          <div class="slider-row">
+            <input type="range" id="logoPosY" min="0" max="100" value="20" step="1">
+            <input type="number" class="num-box" id="logoPosYN" min="0" max="100" value="20">
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Gradient overlay</div>
+    <div class="grid3" style="align-items:start;gap:12px">
+      <div>
+        <div class="ctrl-label" style="font-size:12px;color:var(--text-muted)">Opacity</div>
+        <div class="slider-row" style="margin-top:5px">
+          <input type="range" id="gradOpac" min="0" max="100" value="40" step="1">
+          <input type="number" class="num-box" id="gradOpacN" min="0" max="100" value="40">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div>
+        <div class="ctrl-label" style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Color</div>
+        <div class="swatch-row" style="margin-top:0"><label>From (dark end)</label><input type="color" id="gradColor1" value="#000000" aria-label="Gradient from color (dark end)"></div>
+        <div class="swatch-row"><label>To (fade end)</label><input type="color" id="gradColor2" value="#000000" aria-label="Gradient to color (fade end)"></div>
+      </div>
+      <div>
+        <div class="ctrl-label" style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Direction</div>
+        <div class="dir-row">
+          <button class="dir-btn active" data-dir="to bottom">↓ Top→Bot</button>
+          <button class="dir-btn" data-dir="to top">↑ Bot→Top</button>
+          <button class="dir-btn" data-dir="to right">→ Left→Right</button>
+          <button class="dir-btn" data-dir="to left">← Right→Left</button>
+          <button class="dir-btn" data-dir="to bottom right">↘ Diagonal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="action-bar">
+      <div>
+        <div class="card-title" style="margin:0">Export presets</div>
+        <div id="iconIncludedMsg" class="icon-not-included" style="margin-top:4px">
+          <span>○</span><span>App icon &amp; logo not included — configure in App icon &amp; logo tab</span>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button id="exportSelBtn" disabled>Export selected as zip</button>
+        <button id="exportAllBtn" class="primary" disabled>Export all as zip</button>
+      </div>
+    </div>
+    <div class="status-bar" id="statusMsg" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="progress-wrap" id="progressWrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="note" id="largeNote">⚠ Some images were automatically compressed using PNG quantization to stay under 4MB. If the portal still rejects them, run through tinypng.com.</div>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr>
+          <th style="width:28px"><input type="checkbox" id="checkAll" title="Select all"></th>
+          <th>Image</th><th>Dimensions</th><th>Filename</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="preview-area">
+      <div class="no-img" id="noImg">Upload a background image to preview</div>
+      <canvas id="previewCanvas" style="display:none"></canvas>
+      <div class="preview-label" id="previewLabel" style="display:none"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TAB 2 — APP ICON & COURSE LOGO
+════════════════════════════════════════════ -->
+<div class="page" id="tab-icons">
+<div class="main">
+  <div class="info-note">These files (app-icon.png &amp; main-logo.png) are automatically included when you export from the <strong>Splash screens</strong> tab — no need to export separately unless you only need these two files.</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Logo image</div>
+      <div class="upload-zone" id="iconLogoZone">
+        <input type="file" accept="image/*" id="iconLogoInput">
+        <div id="iconLogoContent"><div class="ico">⛳</div><p>Click or drop logo (PNG with transparency recommended)</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Settings</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);line-height:1.7">
+        <strong style="color:var(--text);font-weight:500">App Icon (180×180)</strong> — white background, no transparency.<br>
+        <strong style="color:var(--text);font-weight:500">Course Logo (990×495)</strong> — transparent background.
+      </div>
+      <div class="ctrl-group" style="margin-top:0">
+        <div class="ctrl-label">Logo size within frame</div>
+        <div class="slider-row">
+          <input type="range" id="iconLogoSize" min="20" max="95" value="70" step="1">
+          <input type="number" class="num-box" id="iconLogoSizeN" min="20" max="95" value="70">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Horizontal position</div>
+        <div class="slider-row">
+          <input type="range" id="iconPosX" min="0" max="100" value="50" step="1">
+          <input type="number" class="num-box" id="iconPosXN" min="0" max="100" value="50">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Vertical position</div>
+        <div class="slider-row">
+          <input type="range" id="iconPosY" min="0" max="100" value="50" step="1">
+          <input type="number" class="num-box" id="iconPosYN" min="0" max="100" value="50">
+          <span class="unit">%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="action-bar">
+      <div class="card-title" style="margin:0">Preview &amp; export (standalone)</div>
+      <button id="iconExportBtn" class="primary" disabled>Export icon &amp; logo zip</button>
+    </div>
+    <div class="status-bar" id="iconStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="icon-previews">
+      <div class="icon-preview-box">
+        <div class="icon-dim-label">App Icon — 180×180px</div>
+        <div class="icon-canvas-wrap"><canvas id="iconPreview" width="180" height="180" style="width:180px;height:180px"></canvas></div>
+        <div class="icon-dim-label" style="color:var(--text-hint)">app-icon.png</div>
+      </div>
+      <div class="icon-preview-box" style="background:repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 16px 16px">
+        <div class="icon-dim-label" style="background:var(--surface);padding:2px 6px;border-radius:3px">Course Logo — 990×495px</div>
+        <div class="icon-canvas-wrap" style="max-width:100%;overflow:hidden">
+          <canvas id="logoPreview" width="990" height="495" style="width:100%;max-width:495px;height:auto"></canvas>
+        </div>
+        <div class="icon-dim-label" style="color:var(--text-hint)">main-logo.png</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TAB 3 — HEADER CROP
+════════════════════════════════════════════ -->
+<div class="page" id="tab-crop">
+<div class="main">
+  <div class="grid2" style="align-items:start">
+    <div class="card">
+      <div class="card-title">Source image</div>
+      <div class="upload-zone" id="cropImgZone">
+        <input type="file" accept="image/*" id="cropImgInput">
+        <div id="cropImgContent"><div class="ico">🖼</div><p>Click or drop image to crop</p></div>
+      </div>
+      <div class="ctrl-group" style="margin-top:14px">
+        <div class="ctrl-label">Zoom</div>
+        <div class="slider-row">
+          <input type="range" id="cropZoom" min="1" max="300" value="100" step="1">
+          <input type="number" class="num-box" id="cropZoomN" min="1" max="300" value="100">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <!-- Crop fit mode -->
+      <div class="ctrl-group">
+        <div class="ctrl-label">Image fit</div>
+        <div class="fit-toggle">
+          <button class="fit-btn active" id="cropFillBtn" title="Image always fills frame; no empty space">Fill (no gaps)</button>
+          <button class="fit-btn" id="cropFitBtn" title="Allow image smaller than frame, padded with color">Fit (allow padding)</button>
+        </div>
+        <div class="fit-pad-color" id="cropPadRow" style="display:none">
+          <span>Padding color</span>
+          <input type="color" id="cropPadColor" value="#ffffff" aria-label="Crop padding color">
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">
+        Drag the image inside the frame to reposition.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Crop preview — 600×200px output — drag to reposition</div>
+      <div id="cropWorkspace">
+        <div class="crop-no-img" id="cropNoImg">Upload an image to start cropping</div>
+        <div id="cropFrameWrap" style="display:none">
+          <div id="cropFrame" class="crop-frame">
+            <canvas id="cropCanvas"></canvas>
+          </div>
+          <div class="crop-hint" id="cropHint"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div class="status-bar" id="cropStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+        <button id="cropExportBtn" class="primary" disabled>Export crop as PNG</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   SHARED UTILITIES
+══════════════════════════════════════════ */
+const SIZE_LIMIT = 4 * 1024 * 1024;
+
+function loadImg(file, cb, onError) {
+  const r = new FileReader();
+  r.onerror = () => onError && onError('Could not read the file.');
+  r.onload = e => {
+    const img = new Image();
+    img.onload = () => cb(img);
+    img.onerror = () => onError && onError('Not a valid image file.');
+    img.src = e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+function showUploadError(zoneId, contentId, msg) {
+  const zone = document.getElementById(zoneId);
+  zone.classList.remove('has-file', 'drag-over');
+  zone.classList.add('has-error');
+  document.getElementById(contentId).innerHTML = `<div class="ico">⚠️</div><p>${msg}</p>`;
+}
+
+function setupDropZone(zone, onFile) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', e => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag-over'); });
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) onFile(f); });
+}
+
+function syncSliderNum(sliderId, numId, min, max) {
+  const sl = document.getElementById(sliderId);
+  const nb = document.getElementById(numId);
+  const clamp = v => Math.min(max, Math.max(min, v));
+  sl.addEventListener('input', () => { nb.value = sl.value; });
+  nb.addEventListener('input', () => {
+    const v = parseInt(nb.value, 10);
+    if (!isNaN(v)) sl.value = clamp(v);
+  });
+  nb.addEventListener('blur', () => {
+    const v = isNaN(parseInt(nb.value, 10)) ? min : clamp(parseInt(nb.value, 10));
+    nb.value = v; sl.value = v;
+  });
+  nb.addEventListener('keydown', e => { if (e.key === 'Enter') nb.blur(); });
+}
+
+function getVal(id) { return +document.getElementById(id).value; }
+function hexToRgb(h) {
+  return { r: parseInt(h.slice(1,3),16), g: parseInt(h.slice(3,5),16), b: parseInt(h.slice(5,7),16) };
+}
+
+/* ── Web Worker for off-thread PNG encoding ── */
+const _workerSrc = `
+importScripts('https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js');
+const _SZ = 4194304;
+function _enc(buf, w, h, q) { return UPNG.encode([buf], w, h, q); }
+function _scale(buf, w, h, s) {
+  try {
+    const nw = Math.round(w * s), nh = Math.round(h * s);
+    const src = new OffscreenCanvas(w, h);
+    src.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buf), w, h), 0, 0);
+    const dst = new OffscreenCanvas(nw, nh);
+    dst.getContext('2d').drawImage(src, 0, 0, nw, nh);
+    return { buf: dst.getContext('2d').getImageData(0, 0, nw, nh).data.buffer, w: nw, h: nh };
+  } catch(e) { return null; }
+}
+self.onmessage = function(e) {
+  const { id, buf, w, h } = e.data;
+  let bytes = _enc(buf, w, h, 0);
+  if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes }, [bytes]); return; }
+  for (const q of [256, 128, 64]) {
+    bytes = _enc(buf, w, h, q);
+    if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes }, [bytes]); return; }
+  }
+  for (let si = 9; si >= 5; si--) {
+    const sc = _scale(buf, w, h, si / 10);
+    if (!sc) break;
+    bytes = _enc(sc.buf, sc.w, sc.h, 128);
+    if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes }, [bytes]); return; }
+  }
+  const fb = _scale(buf, w, h, 0.5);
+  bytes = fb ? _enc(fb.buf, fb.w, fb.h, 64) : _enc(buf, w, h, 64);
+  self.postMessage({ id, bytes }, [bytes]);
+};
+`;
+
+let _worker = null, _pending = new Map(), _wid = 0, _wFailed = false;
+try {
+  _worker = new Worker(URL.createObjectURL(new Blob([_workerSrc], { type: 'text/javascript' })));
+  _worker.onmessage = e => {
+    const { id, bytes } = e.data;
+    const res = _pending.get(id); _pending.delete(id);
+    if (res) res(bytes ? new Uint8Array(bytes) : null);
+  };
+  _worker.onerror = () => {
+    _wFailed = true;
+    _pending.forEach(res => res(null)); _pending.clear();
+  };
+} catch(e) { _wFailed = true; }
+
+async function encodePNGCompressed(canvas) {
+  if (!_wFailed && _worker) {
+    const imgd = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+    const buf = imgd.data.buffer;
+    const result = await new Promise(res => {
+      const id = _wid++;
+      _pending.set(id, res);
+      _worker.postMessage({ id, buf, w: canvas.width, h: canvas.height }, [buf]);
+    });
+    if (result) return result;
+    _wFailed = true; // fall through to sync
+  }
+  // Synchronous fallback (also used if worker unavailable)
+  function enc(c, cnum) {
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+    return UPNG.encode([d.data.buffer], c.width, c.height, cnum);
+  }
+  let bytes = enc(canvas, 0);
+  if (bytes.byteLength <= SIZE_LIMIT) return new Uint8Array(bytes);
+  for (const cnum of [256, 128, 64]) {
+    bytes = enc(canvas, cnum);
+    if (bytes.byteLength <= SIZE_LIMIT) return new Uint8Array(bytes);
+    await new Promise(r => setTimeout(r, 0));
+  }
+  for (let s = 0.9; s >= 0.5; s -= 0.1) {
+    const sc = document.createElement('canvas');
+    sc.width = Math.round(canvas.width * s); sc.height = Math.round(canvas.height * s);
+    sc.getContext('2d').drawImage(canvas, 0, 0, sc.width, sc.height);
+    bytes = enc(sc, 128);
+    if (bytes.byteLength <= SIZE_LIMIT) return new Uint8Array(bytes);
+    await new Promise(r => setTimeout(r, 0));
+  }
+  const fb = document.createElement('canvas');
+  fb.width = Math.round(canvas.width * 0.5); fb.height = Math.round(canvas.height * 0.5);
+  fb.getContext('2d').drawImage(canvas, 0, 0, fb.width, fb.height);
+  return new Uint8Array(enc(fb, 64));
+}
+
+async function downloadZip(files, zipName) {
+  const zip = new JSZip();
+  for (const { name, bytes } of files) zip.file(name, bytes);
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = zipName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function downloadBlob(bytes, filename) {
+  const blob = new Blob([bytes], { type: 'image/png' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function getCourseName() {
+  return document.getElementById('courseNameInput').value.trim().replace(/\s+/g, '-') || 'course';
+}
+
+function getSafeCourseName() {
+  return getCourseName().replace(/[^a-zA-Z0-9\-_]/g, '');
+}
+
+/* ── Persist course name ── */
+const courseNameInput = document.getElementById('courseNameInput');
+const savedCourseName = localStorage.getItem('cai_courseName');
+if (savedCourseName) courseNameInput.value = savedCourseName;
+courseNameInput.addEventListener('input', () => {
+  localStorage.setItem('cai_courseName', courseNameInput.value);
+});
+
+/* ── Tab switching ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    updateIconIncludedMsg();
+  });
+});
+
+/* ══════════════════════════════════════════
+   TEMPLATES
+══════════════════════════════════════════ */
+const TEMPLATE_KEY = 'cai_templates';
+
+function getTemplates() {
+  try { return JSON.parse(localStorage.getItem(TEMPLATE_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function saveTemplates(arr) {
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(arr));
+}
+
+function getCurrentSettings() {
+  return {
+    logoSize: getVal('logoSize'), logoPosX: getVal('logoPosX'), logoPosY: getVal('logoPosY'),
+    gradOpac: getVal('gradOpac'),
+    gradColor1: document.getElementById('gradColor1').value,
+    gradColor2: document.getElementById('gradColor2').value,
+    gradDir: gradDir,
+    splashFitMode: splashFitMode,
+    splashPadColor: document.getElementById('splashPadColor').value,
+    iconLogoSize: getVal('iconLogoSize'), iconPosX: getVal('iconPosX'), iconPosY: getVal('iconPosY'),
+    cropFitMode: cropFitMode,
+    cropPadColor: document.getElementById('cropPadColor').value
+  };
+}
+
+function applySettings(s) {
+  if (s.logoSize !== undefined) { document.getElementById('logoSize').value = s.logoSize; document.getElementById('logoSizeN').value = s.logoSize; }
+  if (s.logoPosX !== undefined) { document.getElementById('logoPosX').value = s.logoPosX; document.getElementById('logoPosXN').value = s.logoPosX; }
+  if (s.logoPosY !== undefined) { document.getElementById('logoPosY').value = s.logoPosY; document.getElementById('logoPosYN').value = s.logoPosY; }
+  if (s.gradOpac !== undefined) { document.getElementById('gradOpac').value = s.gradOpac; document.getElementById('gradOpacN').value = s.gradOpac; }
+  if (s.gradColor1) document.getElementById('gradColor1').value = s.gradColor1;
+  if (s.gradColor2) document.getElementById('gradColor2').value = s.gradColor2;
+  if (s.gradDir) {
+    gradDir = s.gradDir;
+    document.querySelectorAll('.dir-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.dir === gradDir);
+    });
+  }
+  if (s.splashFitMode) {
+    splashFitMode = s.splashFitMode;
+    document.getElementById('splashFillBtn').classList.toggle('active', splashFitMode === 'fill');
+    document.getElementById('splashFitBtn').classList.toggle('active', splashFitMode === 'fit');
+    document.getElementById('splashPadRow').style.display = splashFitMode === 'fit' ? 'flex' : 'none';
+  }
+  if (s.splashPadColor) document.getElementById('splashPadColor').value = s.splashPadColor;
+  if (s.iconLogoSize !== undefined) { document.getElementById('iconLogoSize').value = s.iconLogoSize; document.getElementById('iconLogoSizeN').value = s.iconLogoSize; }
+  if (s.iconPosX !== undefined) { document.getElementById('iconPosX').value = s.iconPosX; document.getElementById('iconPosXN').value = s.iconPosX; }
+  if (s.iconPosY !== undefined) { document.getElementById('iconPosY').value = s.iconPosY; document.getElementById('iconPosYN').value = s.iconPosY; }
+  if (s.cropFitMode !== undefined) {
+    cropFitMode = s.cropFitMode;
+    document.getElementById('cropFillBtn').classList.toggle('active', !cropFitMode);
+    document.getElementById('cropFitBtn').classList.toggle('active', cropFitMode);
+    document.getElementById('cropPadRow').style.display = cropFitMode ? 'flex' : 'none';
+  }
+  if (s.cropPadColor) document.getElementById('cropPadColor').value = s.cropPadColor;
+  splashRender();
+  drawIconPreviews();
+  drawCrop();
+}
+
+function renderTemplateList() {
+  const list = document.getElementById('templateList');
+  const templates = getTemplates();
+  if (!templates.length) {
+    list.innerHTML = '<div class="template-empty">No saved templates yet — configure settings and save one above.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  templates.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'template-item';
+    row.innerHTML = `
+      <div style="flex:1">
+        <div class="template-item-name">${t.name}</div>
+        <div class="template-item-meta">Logo ${t.logoSize}% · Grad ${t.gradOpac}% · ${t.splashFitMode === 'fit' ? 'Letterbox' : 'Fill'}</div>
+      </div>
+      <button style="font-size:12px;padding:4px 10px" data-load="${i}">Load</button>
+      <button class="danger" style="font-size:12px;padding:4px 8px" data-del="${i}" aria-label="Delete template ${t.name}">✕</button>
+    `;
+    row.querySelector('[data-load]').addEventListener('click', () => {
+      applySettings(getTemplates()[i]);
+    });
+    row.querySelector('[data-del]').addEventListener('click', () => {
+      const arr = getTemplates(); arr.splice(i, 1); saveTemplates(arr); renderTemplateList();
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('templateSaveBtn').addEventListener('click', () => {
+  const name = document.getElementById('templateNameInput').value.trim();
+  if (!name) { document.getElementById('templateNameInput').focus(); return; }
+  const arr = getTemplates();
+  arr.push({ name, ...getCurrentSettings() });
+  saveTemplates(arr);
+  document.getElementById('templateNameInput').value = '';
+  renderTemplateList();
+});
+
+document.getElementById('templatesToggle').addEventListener('click', () => {
+  const body = document.getElementById('templatesBody');
+  const chevron = document.getElementById('templatesChevron');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chevron.classList.toggle('open', !open);
+  if (!open) renderTemplateList();
+});
+
+// Enter key saves template
+document.getElementById('templateNameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('templateSaveBtn').click(); }
+});
+
+// Template export
+document.getElementById('templateExportBtn').addEventListener('click', () => {
+  const arr = getTemplates();
+  if (!arr.length) { alert('No saved templates to export.'); return; }
+  const blob = new Blob([JSON.stringify(arr, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'cai-templates.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+});
+
+// Template import
+document.getElementById('templateImportBtn').addEventListener('click', () => {
+  document.getElementById('templateImportInput').click();
+});
+document.getElementById('templateImportInput').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Not a valid templates file');
+      const valid = imported.filter(t => t && typeof t.name === 'string' && t.name.trim());
+      if (!valid.length) throw new Error('No valid templates found in file');
+      saveTemplates([...getTemplates(), ...valid]);
+      const body = document.getElementById('templatesBody');
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        document.getElementById('templatesChevron').classList.add('open');
+      }
+      renderTemplateList();
+    } catch(err) { alert('Import failed: ' + err.message); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+/* ══════════════════════════════════════════
+   TAB 1 — SPLASH SCREENS
+══════════════════════════════════════════ */
+/* App Icon & Course Logo are now in Tab 2 only */
+const SIZES = [
+  {name:'HDPI',            w:720,  h:1280, file:'HDPI'},
+  {name:'XHDPI',           w:1080, h:1920, file:'XHDPI'},
+  {name:'XXHDPI',          w:1440, h:2560, file:'XXHDPI'},
+  {name:'XXXHDPI',         w:2160, h:3840, file:'XXXHDPI'},
+  {name:'Tablet 1X',       w:768,  h:1024, file:'tablet-1x'},
+  {name:'Tablet 2X',       w:1620, h:2160, file:'tablet-2x'},
+  {name:'1X',              w:320,  h:480,  file:'1x'},
+  {name:'2X',              w:828,  h:1792, file:'2x'},
+  {name:'3X',              w:1170, h:2532, file:'3x'},
+  {name:'Scorecard',       w:780,  h:590,  file:'scorecard'},
+  {name:'Google Featured', w:1024, h:500,  file:'google-featured'},
+  {name:'Google Play Logo',w:512,  h:512,  file:'google-play'},
+  {name:'App Row',         w:1150, h:322,  file:'app-row'},
+];
+const LARGE = ['XXHDPI','XXXHDPI','Tablet 2X'];
+
+let bgImg = null, logoImg = null, activeIdx = 0, gradDir = 'to bottom';
+let splashFitMode = 'fill'; // 'fill' | 'fit'
+
+function updateIconIncludedMsg() {
+  const msg = document.getElementById('iconIncludedMsg');
+  if (iconLogoImg) {
+    msg.className = 'icon-included';
+    msg.innerHTML = '<span>✓</span><span>App icon &amp; logo will be included in export</span>';
+  } else {
+    msg.className = 'icon-not-included';
+    msg.innerHTML = '<span>○</span><span>App icon &amp; logo not included — configure in App icon &amp; logo tab</span>';
+  }
+}
+
+function buildTable() {
+  const tb = document.getElementById('tbody'); tb.innerHTML = '';
+  SIZES.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    if (i === activeIdx) tr.classList.add('active-row');
+    tr.innerHTML = `<td><input type="checkbox" class="chk" data-i="${i}"></td>
+      <td>${s.name}${LARGE.includes(s.name) ? '<span class="badge-warn">large</span>' : ''}</td>
+      <td style="color:var(--text-muted);white-space:nowrap;font-size:12px">${s.w}×${s.h}</td>
+      <td><div style="display:flex;align-items:center;gap:3px">
+        <input class="fname-input" type="text" value="${s.file}" data-i="${i}">
+        <span class="ext">.png</span></div></td>`;
+    tr.addEventListener('click', e => {
+      if (e.target.tagName === 'INPUT') return;
+      activeIdx = i; buildTable(); splashRender();
+    });
+    tb.appendChild(tr);
+  });
+  document.querySelectorAll('.fname-input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const v = e.target.value.trim();
+      if (v) SIZES[+e.target.dataset.i].file = v;
+    });
+  });
+  document.getElementById('checkAll').addEventListener('change', function () {
+    document.querySelectorAll('.chk').forEach(c => c.checked = this.checked);
+  });
+}
+
+function drawSplash(canvas, w, h) {
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  if (bgImg) {
+    if (splashFitMode === 'fill') {
+      // cover: fill canvas, crop image edges
+      const bA = bgImg.width / bgImg.height, cA = w / h;
+      let sx, sy, sw, sh;
+      if (bA > cA) { sh = bgImg.height; sw = sh * cA; sy = 0; sx = (bgImg.width - sw) / 2; }
+      else { sw = bgImg.width; sh = sw / cA; sx = 0; sy = (bgImg.height - sh) / 2; }
+      ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, w, h);
+    } else {
+      // fit: letterbox with padding color
+      const padColor = document.getElementById('splashPadColor').value;
+      ctx.fillStyle = padColor;
+      ctx.fillRect(0, 0, w, h);
+      const scale = Math.min(w / bgImg.width, h / bgImg.height);
+      const dw = bgImg.width * scale, dh = bgImg.height * scale;
+      const dx = (w - dw) / 2, dy = (h - dh) / 2;
+      ctx.drawImage(bgImg, dx, dy, dw, dh);
+    }
+  } else {
+    ctx.fillStyle = '#888'; ctx.fillRect(0, 0, w, h);
+  }
+
+  // Gradient overlay
+  const opac = getVal('gradOpac') / 100;
+  if (opac > 0) {
+    const c1 = hexToRgb(document.getElementById('gradColor1').value);
+    const c2 = hexToRgb(document.getElementById('gradColor2').value);
+    let x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    switch (gradDir) {
+      case 'to bottom':      x0=0; y0=0; x1=0; y1=h; break;
+      case 'to top':         x0=0; y0=h; x1=0; y1=0; break;
+      case 'to right':       x0=0; y0=0; x1=w; y1=0; break;
+      case 'to left':        x0=w; y0=0; x1=0; y1=0; break;
+      case 'to bottom right':x0=0; y0=0; x1=w; y1=h; break;
+    }
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    g.addColorStop(0, `rgba(${c1.r},${c1.g},${c1.b},${opac})`);
+    g.addColorStop(1, `rgba(${c2.r},${c2.g},${c2.b},0)`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  }
+
+  // Logo overlay
+  if (logoImg) {
+    const pct = getVal('logoSize') / 100;
+    const lw = w * pct, lh = lw * (logoImg.height / logoImg.width);
+    const cx = (getVal('logoPosX') / 100) * w, cy = (getVal('logoPosY') / 100) * h;
+    ctx.drawImage(logoImg, cx - lw / 2, cy - lh / 2, lw, lh);
+  }
+}
+
+function splashRender() {
+  const cv = document.getElementById('previewCanvas');
+  const noImg = document.getElementById('noImg');
+  const lbl = document.getElementById('previewLabel');
+  if (!bgImg) { cv.style.display = 'none'; noImg.style.display = 'block'; lbl.style.display = 'none'; return; }
+  noImg.style.display = 'none'; cv.style.display = 'block'; lbl.style.display = 'block';
+  const s = SIZES[activeIdx];
+  const scale = Math.min(680 / s.w, 280 / s.h, 1);
+  const pw = Math.round(s.w * scale), ph = Math.round(s.h * scale);
+  const off = document.createElement('canvas');
+  drawSplash(off, s.w, s.h);
+  cv.width = pw; cv.height = ph;
+  cv.getContext('2d').drawImage(off, 0, 0, pw, ph);
+  lbl.textContent = `${s.name} — ${s.w}×${s.h}px`;
+}
+
+function splashUpdateBtns() {
+  const ok = !!bgImg;
+  document.getElementById('exportAllBtn').disabled = !ok;
+  document.getElementById('exportSelBtn').disabled = !ok;
+}
+
+function setSplashStatus(type, msg) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg; el.className = 'status-bar' + (type ? ' ' + type : '');
+}
+
+function showSplashProgress(show) {
+  document.getElementById('progressWrap').style.display = show ? 'block' : 'none';
+  if (!show) document.getElementById('progressFill').style.width = '0%';
+}
+
+function setSplashProgress(pct) { document.getElementById('progressFill').style.width = pct + '%'; }
+
+async function runSplashExport(indices, zipSuffix) {
+  if (!bgImg) return;
+  const courseName = getSafeCourseName();
+  const zipName = `${courseName}-${zipSuffix}.zip`;
+  setSplashStatus('working', 'Rendering images…');
+  showSplashProgress(true);
+  document.getElementById('largeNote').style.display = 'none';
+
+  const files = [];
+  let largeFound = false;
+  const total = indices.length + (iconLogoImg ? 2 : 0);
+  let done = 0;
+
+  // Splash images
+  for (let i = 0; i < indices.length; i++) {
+    const s = SIZES[indices[i]];
+    setSplashStatus('working', `Processing ${++done}/${total}: ${s.file}.png…`);
+    setSplashProgress((done / total) * 88);
+    const off = document.createElement('canvas');
+    drawSplash(off, s.w, s.h);
+    const pngCheck = UPNG.encode([off.getContext('2d').getImageData(0,0,off.width,off.height).data.buffer], off.width, off.height, 0);
+    if (pngCheck.byteLength > SIZE_LIMIT) largeFound = true;
+    const bytes = await encodePNGCompressed(off);
+    files.push({ name: s.file + '.png', bytes });
+    await new Promise(r => setTimeout(r, 10));
+  }
+
+  // Include icon & logo if configured in Tab 2
+  if (iconLogoImg) {
+    setSplashStatus('working', `Processing ${++done}/${total}: app-icon.png…`);
+    setSplashProgress((done / total) * 88);
+    const c1 = document.createElement('canvas');
+    drawIconCanvas(c1, 180, 180, false);
+    files.push({ name: 'app-icon.png', bytes: await encodePNGCompressed(c1) });
+    await new Promise(r => setTimeout(r, 10));
+
+    setSplashStatus('working', `Processing ${++done}/${total}: main-logo.png…`);
+    setSplashProgress((done / total) * 88);
+    const c2 = document.createElement('canvas');
+    drawIconCanvas(c2, 990, 495, true);
+    files.push({ name: 'main-logo.png', bytes: await encodePNGCompressed(c2) });
+    await new Promise(r => setTimeout(r, 10));
+  }
+
+  setSplashStatus('working', 'Building zip…'); setSplashProgress(94);
+  await downloadZip(files, zipName);
+  setSplashProgress(100); setTimeout(() => showSplashProgress(false), 700);
+  setSplashStatus('ok', `Done — ${files.length} file${files.length !== 1 ? 's' : ''} saved to ${zipName}`);
+  if (largeFound) document.getElementById('largeNote').style.display = 'block';
+}
+
+document.getElementById('exportAllBtn').addEventListener('click', () => runSplashExport(SIZES.map((_, i) => i), 'app-images'));
+document.getElementById('exportSelBtn').addEventListener('click', () => {
+  const checked = [...document.querySelectorAll('.chk:checked')].map(c => +c.dataset.i);
+  if (!checked.length) { setSplashStatus('', 'No rows selected.'); return; }
+  runSplashExport(checked, 'app-images-selected');
+});
+
+/* ── Splash fit mode toggle ── */
+document.getElementById('splashFillBtn').addEventListener('click', () => {
+  splashFitMode = 'fill';
+  document.getElementById('splashFillBtn').classList.add('active');
+  document.getElementById('splashFitBtn').classList.remove('active');
+  document.getElementById('splashPadRow').style.display = 'none';
+  splashRender();
+});
+document.getElementById('splashFitBtn').addEventListener('click', () => {
+  splashFitMode = 'fit';
+  document.getElementById('splashFitBtn').classList.add('active');
+  document.getElementById('splashFillBtn').classList.remove('active');
+  document.getElementById('splashPadRow').style.display = 'flex';
+  splashRender();
+});
+document.getElementById('splashPadColor').addEventListener('input', splashRender);
+
+/* ── File inputs ── */
+function loadBgImg(file) {
+  loadImg(file, img => {
+    bgImg = img;
+    document.getElementById('bgZone').classList.add('has-file'); document.getElementById('bgZone').classList.remove('has-error');
+    document.getElementById('bgContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    splashUpdateBtns(); splashRender();
+  }, msg => showUploadError('bgZone', 'bgContent', msg));
+}
+document.getElementById('bgInput').addEventListener('change', e => { if (e.target.files[0]) loadBgImg(e.target.files[0]); });
+setupDropZone(document.getElementById('bgZone'), loadBgImg);
+
+function loadLogoImg(file) {
+  loadImg(file, img => {
+    logoImg = img;
+    document.getElementById('logoZone').classList.add('has-file'); document.getElementById('logoZone').classList.remove('has-error');
+    document.getElementById('logoContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('logoControls').style.display = 'block';
+    splashRender();
+  }, msg => showUploadError('logoZone', 'logoContent', msg));
+}
+document.getElementById('logoInput').addEventListener('change', e => { if (e.target.files[0]) loadLogoImg(e.target.files[0]); });
+setupDropZone(document.getElementById('logoZone'), loadLogoImg);
+
+/* ── Sliders / colors ── */
+[['logoSize','logoSizeN',5,80],['logoPosX','logoPosXN',0,100],['logoPosY','logoPosYN',0,100],['gradOpac','gradOpacN',0,100]].forEach(([s,n,mn,mx]) => {
+  syncSliderNum(s, n, mn, mx);
+  document.getElementById(s).addEventListener('input', splashRender);
+  document.getElementById(n).addEventListener('input', splashRender);
+});
+['gradColor1','gradColor2'].forEach(id => document.getElementById(id).addEventListener('input', splashRender));
+document.querySelectorAll('.dir-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); gradDir = btn.dataset.dir; splashRender();
+  });
+});
+
+buildTable();
+
+/* ══════════════════════════════════════════
+   TAB 2 — APP ICON & COURSE LOGO
+══════════════════════════════════════════ */
+let iconLogoImg = null;
+
+function drawIconCanvas(canvas, w, h, transparent) {
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (transparent) { ctx.clearRect(0, 0, w, h); }
+  else { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); }
+  if (iconLogoImg) {
+    const pct = getVal('iconLogoSize') / 100;
+    const lw = w * pct, lh = lw * (iconLogoImg.height / iconLogoImg.width);
+    const cx = (getVal('iconPosX') / 100) * w, cy = (getVal('iconPosY') / 100) * h;
+    ctx.drawImage(iconLogoImg, cx - lw / 2, cy - lh / 2, lw, lh);
+  }
+}
+
+function drawIconPreviews() {
+  drawIconCanvas(document.getElementById('iconPreview'), 180, 180, false);
+  drawIconCanvas(document.getElementById('logoPreview'), 990, 495, true);
+}
+
+function loadIconLogoImg(file) {
+  loadImg(file, img => {
+    iconLogoImg = img;
+    document.getElementById('iconLogoZone').classList.add('has-file'); document.getElementById('iconLogoZone').classList.remove('has-error');
+    document.getElementById('iconLogoContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('iconExportBtn').disabled = false;
+    drawIconPreviews(); updateIconIncludedMsg();
+  }, msg => showUploadError('iconLogoZone', 'iconLogoContent', msg));
+}
+document.getElementById('iconLogoInput').addEventListener('change', e => { if (e.target.files[0]) loadIconLogoImg(e.target.files[0]); });
+setupDropZone(document.getElementById('iconLogoZone'), loadIconLogoImg);
+
+[['iconLogoSize','iconLogoSizeN',20,95],['iconPosX','iconPosXN',0,100],['iconPosY','iconPosYN',0,100]].forEach(([s,n,mn,mx]) => {
+  syncSliderNum(s, n, mn, mx);
+  document.getElementById(s).addEventListener('input', drawIconPreviews);
+  document.getElementById(n).addEventListener('input', drawIconPreviews);
+});
+
+document.getElementById('iconExportBtn').addEventListener('click', async () => {
+  if (!iconLogoImg) return;
+  const btn = document.getElementById('iconExportBtn');
+  const st = document.getElementById('iconStatus');
+  const courseName = getSafeCourseName();
+  btn.disabled = true; st.textContent = 'Encoding…'; st.className = 'status-bar working';
+  const c1 = document.createElement('canvas'), c2 = document.createElement('canvas');
+  drawIconCanvas(c1, 180, 180, false); drawIconCanvas(c2, 990, 495, true);
+  const [b1, b2] = await Promise.all([encodePNGCompressed(c1), encodePNGCompressed(c2)]);
+  await downloadZip([{ name: 'app-icon.png', bytes: b1 }, { name: 'main-logo.png', bytes: b2 }], `${courseName}-icons.zip`);
+  btn.disabled = false; st.textContent = `Exported ${courseName}-icons.zip`; st.className = 'status-bar ok';
+});
+
+/* ══════════════════════════════════════════
+   TAB 3 — HEADER CROP (600×200)
+══════════════════════════════════════════ */
+const CROP_W = 600, CROP_H = 200, MAX_FRAME_W = 680;
+let cropImg = null;
+let cropOffX = 0, cropOffY = 0, cropZoom = 100;
+let cropDragging = false, cropDragStartX = 0, cropDragStartY = 0, cropOffXAtDrag = 0, cropOffYAtDrag = 0;
+let cropFitMode = false; // false = fill (clamp), true = fit (allow padding)
+
+function buildCropFrame() {
+  if (!cropImg) return;
+  const scale = Math.min(1, MAX_FRAME_W / CROP_W);
+  const fw = Math.round(CROP_W * scale), fh = Math.round(CROP_H * scale);
+  const frame = document.getElementById('cropFrame');
+  frame.style.width = fw + 'px'; frame.style.height = fh + 'px';
+  const cv = document.getElementById('cropCanvas');
+  cv.width = fw; cv.height = fh;
+  document.getElementById('cropHint').textContent = `Output: ${CROP_W}×${CROP_H}px — drag to reposition`;
+}
+
+function clampCropOffset() {
+  if (!cropImg) return;
+  if (cropFitMode) return; // allow image smaller than frame
+  const iw = cropImg.width * (cropZoom / 100);
+  const ih = cropImg.height * (cropZoom / 100);
+  cropOffX = Math.min(0, Math.max(CROP_W - iw, cropOffX));
+  cropOffY = Math.min(0, Math.max(CROP_H - ih, cropOffY));
+}
+
+function resetCrop() {
+  if (!cropImg) return;
+  let scale;
+  if (cropFitMode) {
+    // Scale to fit within frame (no cropping, may have padding)
+    scale = Math.min(CROP_W / cropImg.width, CROP_H / cropImg.height);
+  } else {
+    // Scale to fill (cover, no empty space)
+    scale = Math.max(CROP_W / cropImg.width, CROP_H / cropImg.height);
+  }
+  cropZoom = Math.min(300, Math.max(1, Math.round(scale * 100)));
+  document.getElementById('cropZoom').value = cropZoom;
+  document.getElementById('cropZoomN').value = cropZoom;
+  // Center image
+  const iw = cropImg.width * (cropZoom / 100);
+  const ih = cropImg.height * (cropZoom / 100);
+  cropOffX = (CROP_W - iw) / 2;
+  cropOffY = (CROP_H - ih) / 2;
+  clampCropOffset();
+}
+
+function drawCrop() {
+  if (!cropImg) return;
+  const displayScale = Math.min(1, MAX_FRAME_W / CROP_W);
+  const fw = Math.round(CROP_W * displayScale);
+  const fh = Math.round(CROP_H * displayScale);
+  const cv = document.getElementById('cropCanvas');
+  if (cv.width !== fw || cv.height !== fh) { cv.width = fw; cv.height = fh; }
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, fw, fh);
+
+  // Fill padding color when in fit mode
+  if (cropFitMode) {
+    ctx.fillStyle = document.getElementById('cropPadColor').value;
+    ctx.fillRect(0, 0, fw, fh);
+  }
+
+  const iw = cropImg.width * (cropZoom / 100) * displayScale;
+  const ih = cropImg.height * (cropZoom / 100) * displayScale;
+  const dx = cropOffX * displayScale;
+  const dy = cropOffY * displayScale;
+  ctx.drawImage(cropImg, dx, dy, iw, ih);
+}
+
+/* ── Crop fit mode toggle ── */
+document.getElementById('cropFillBtn').addEventListener('click', () => {
+  cropFitMode = false;
+  document.getElementById('cropFillBtn').classList.add('active');
+  document.getElementById('cropFitBtn').classList.remove('active');
+  document.getElementById('cropPadRow').style.display = 'none';
+  if (cropImg) { resetCrop(); drawCrop(); }
+});
+document.getElementById('cropFitBtn').addEventListener('click', () => {
+  cropFitMode = true;
+  document.getElementById('cropFitBtn').classList.add('active');
+  document.getElementById('cropFillBtn').classList.remove('active');
+  document.getElementById('cropPadRow').style.display = 'flex';
+  if (cropImg) { resetCrop(); drawCrop(); }
+});
+document.getElementById('cropPadColor').addEventListener('input', drawCrop);
+
+/* ── Drag interactions ── */
+const cropFrame = document.getElementById('cropFrame');
+cropFrame.addEventListener('mousedown', e => {
+  if (!cropImg) return;
+  cropDragging = true; cropFrame.classList.add('dragging');
+  cropDragStartX = e.clientX; cropDragStartY = e.clientY;
+  cropOffXAtDrag = cropOffX; cropOffYAtDrag = cropOffY;
+  e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+  if (!cropDragging) return;
+  const displayScale = Math.min(1, MAX_FRAME_W / CROP_W);
+  cropOffX = cropOffXAtDrag + (e.clientX - cropDragStartX) / displayScale;
+  cropOffY = cropOffYAtDrag + (e.clientY - cropDragStartY) / displayScale;
+  clampCropOffset(); drawCrop();
+});
+window.addEventListener('mouseup', () => { cropDragging = false; cropFrame.classList.remove('dragging'); });
+
+cropFrame.addEventListener('touchstart', e => {
+  if (!cropImg || !e.touches[0]) return;
+  cropDragging = true;
+  cropDragStartX = e.touches[0].clientX; cropDragStartY = e.touches[0].clientY;
+  cropOffXAtDrag = cropOffX; cropOffYAtDrag = cropOffY;
+  e.preventDefault();
+}, { passive: false });
+window.addEventListener('touchmove', e => {
+  if (!cropDragging || !e.touches[0]) return;
+  const displayScale = Math.min(1, MAX_FRAME_W / CROP_W);
+  cropOffX = cropOffXAtDrag + (e.touches[0].clientX - cropDragStartX) / displayScale;
+  cropOffY = cropOffYAtDrag + (e.touches[0].clientY - cropDragStartY) / displayScale;
+  clampCropOffset(); drawCrop();
+}, { passive: true });
+window.addEventListener('touchend', () => { cropDragging = false; });
+
+syncSliderNum('cropZoom', 'cropZoomN', 1, 300);
+document.getElementById('cropZoom').addEventListener('input', () => { cropZoom = getVal('cropZoom'); clampCropOffset(); drawCrop(); });
+document.getElementById('cropZoomN').addEventListener('input', () => { cropZoom = getVal('cropZoom'); clampCropOffset(); drawCrop(); });
+
+function loadCropImg(file) {
+  loadImg(file, img => {
+    cropImg = img;
+    document.getElementById('cropImgZone').classList.add('has-file'); document.getElementById('cropImgZone').classList.remove('has-error');
+    document.getElementById('cropImgContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('cropNoImg').style.display = 'none';
+    document.getElementById('cropFrameWrap').style.display = 'block';
+    document.getElementById('cropExportBtn').disabled = false;
+    resetCrop(); buildCropFrame(); drawCrop();
+  }, msg => showUploadError('cropImgZone', 'cropImgContent', msg));
+}
+document.getElementById('cropImgInput').addEventListener('change', e => { if (e.target.files[0]) loadCropImg(e.target.files[0]); });
+setupDropZone(document.getElementById('cropImgZone'), loadCropImg);
+
+document.getElementById('cropExportBtn').addEventListener('click', async () => {
+  if (!cropImg) return;
+  const st = document.getElementById('cropStatus');
+  const courseName = getSafeCourseName();
+  st.textContent = 'Rendering…'; st.className = 'status-bar working';
+  const out = document.createElement('canvas');
+  out.width = CROP_W; out.height = CROP_H;
+  const ctx = out.getContext('2d');
+  // Fill padding color first if in fit mode
+  if (cropFitMode) {
+    ctx.fillStyle = document.getElementById('cropPadColor').value;
+    ctx.fillRect(0, 0, CROP_W, CROP_H);
+  }
+  const iw = cropImg.width * (cropZoom / 100), ih = cropImg.height * (cropZoom / 100);
+  ctx.drawImage(cropImg, cropOffX, cropOffY, iw, ih);
+  const bytes = await encodePNGCompressed(out);
+  const filename = `${courseName}-header-600x200.png`;
+  downloadBlob(bytes, filename);
+  st.textContent = `Exported ${filename}`; st.className = 'status-bar ok';
+});
+</script>
+</body>
+</html>
