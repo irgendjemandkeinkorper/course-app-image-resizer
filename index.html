@@ -73,6 +73,7 @@ header h1{font-family:var(--font-display);font-size:17px;font-weight:600;letter-
 .h-course input{font:inherit;font-size:13px;padding:5px 10px;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);width:200px;outline:none;transition:border-color var(--duration-fast) var(--ease-out-quiet)}
 .h-course input:focus{border-color:var(--accent);box-shadow:var(--ring)}
 .h-course input::placeholder{color:var(--text-hint)}
+.h-course input.input-error{border-color:var(--danger)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 25%,transparent)}
 .tabs{display:flex;gap:0;height:100%}
 .tab-btn{font:inherit;font-size:13px;padding:16px 17px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
 .tab-btn:hover{color:var(--text)}
@@ -154,6 +155,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
 .status-bar{font-size:12px;color:var(--text-muted);min-height:20px;margin-top:6px}
 .status-bar.ok{color:var(--success)}
 .status-bar.working{color:var(--blue)}
+.status-bar.err{color:var(--danger)}
 .progress-wrap{width:100%;height:5px;background:var(--border-med);border-radius:var(--radius-full);margin-top:6px;display:none;overflow:hidden}
 .progress-fill{height:100%;background:var(--accent);border-radius:var(--radius-full);transition:width var(--duration-fast) var(--ease-out-quiet);width:0%}
 .note{font-size:12px;color:var(--warn);background:var(--warn-bg);border:1px solid transparent;border-radius:var(--radius);padding:9px 13px;margin-top:10px;display:none}
@@ -218,7 +220,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
   </div>
   <div class="h-course">
     <label for="courseNameInput">Course</label>
-    <input type="text" id="courseNameInput" placeholder="e.g. Pebble Beach" maxlength="60" autocomplete="off">
+    <input type="text" id="courseNameInput" placeholder="Required to export — e.g. Pebble Beach" maxlength="60" autocomplete="off" title="Required — exported files are named after the course so they don't get lost in Downloads">
   </div>
   <nav class="tabs">
     <button class="tab-btn active" data-tab="splash">Splash screens</button>
@@ -390,7 +392,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
     <div class="card">
       <div class="card-title">Settings</div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);line-height:1.7">
-        <strong style="color:var(--text);font-weight:500">App Icon (180×180)</strong> — white background, no transparency.<br>
+        <strong style="color:var(--text);font-weight:500">App Icon (180×180)</strong> — white background, flattened to RGB (no alpha channel — required by app stores).<br>
         <strong style="color:var(--text);font-weight:500">Course Logo (990×495)</strong> — transparent background.
       </div>
       <div class="ctrl-group" style="margin-top:0">
@@ -639,6 +641,58 @@ async function encodePNGCompressed(canvas) {
   return new Uint8Array(enc(fb, 64));
 }
 
+/* ── Opaque RGB PNG encoder (color type 2 — physically no alpha channel) ──
+   App-store portals reject app icons whose PNG contains an alpha channel,
+   even when every pixel is opaque. UPNG 2.1.0 always encodes from RGBA and
+   may keep the channel, so build the PNG directly: IHDR (ctype 2) + IDAT
+   (pako deflate, filter 0 scanlines) + IEND. */
+const _crcTable = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function _crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = _crcTable[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function _pngChunk(type, data) {
+  const out = new Uint8Array(12 + data.length);
+  const dv = new DataView(out.buffer);
+  dv.setUint32(0, data.length);
+  for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(data, 8);
+  dv.setUint32(8 + data.length, _crc32(out.subarray(4, 8 + data.length)));
+  return out;
+}
+function encodeOpaquePNG(canvas) {
+  const w = canvas.width, h = canvas.height;
+  const rgba = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const raw = new Uint8Array(h * (1 + w * 3)); // filter byte + RGB per scanline
+  for (let y = 0, p = 0, q = 0; y < h; y++) {
+    raw[q++] = 0;
+    for (let x = 0; x < w; x++, p += 4) {
+      raw[q++] = rgba[p]; raw[q++] = rgba[p + 1]; raw[q++] = rgba[p + 2];
+    }
+  }
+  const ihdr = new Uint8Array(13);
+  const dv = new DataView(ihdr.buffer);
+  dv.setUint32(0, w); dv.setUint32(4, h);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // color type 2: truecolor, no alpha
+  const idat = pako.deflate(raw, { level: 9 });
+  const sig = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  const chunks = [sig, _pngChunk('IHDR', ihdr), _pngChunk('IDAT', idat), _pngChunk('IEND', new Uint8Array(0))];
+  const png = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+  let off = 0;
+  for (const c of chunks) { png.set(c, off); off += c.length; }
+  return png;
+}
+
 async function downloadZip(files, zipName) {
   const zip = new JSZip();
   for (const { name, bytes } of files) zip.file(name, bytes);
@@ -671,7 +725,25 @@ const savedCourseName = localStorage.getItem('cai_courseName');
 if (savedCourseName) courseNameInput.value = savedCourseName;
 courseNameInput.addEventListener('input', () => {
   localStorage.setItem('cai_courseName', courseNameInput.value);
+  courseNameInput.classList.remove('input-error');
 });
+
+/* ── Course name is required for every export ──
+   Exports are named "<course>-…" so files stay identifiable in Downloads;
+   an empty name used to silently fall back to "course". */
+function requireCourseName(statusId) {
+  const raw = courseNameInput.value.trim();
+  const safe = raw.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-_]/g, '');
+  if (safe) return safe;
+  courseNameInput.classList.add('input-error');
+  courseNameInput.focus();
+  if (statusId) {
+    const st = document.getElementById(statusId);
+    st.textContent = 'Enter a course name (top of page) before exporting — it names your files so they don’t get lost in Downloads.';
+    st.className = 'status-bar err';
+  }
+  return null;
+}
 
 /* ── Tab switching ── */
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -991,7 +1063,8 @@ function setSplashProgress(pct) { document.getElementById('progressFill').style.
 
 async function runSplashExport(indices, zipSuffix) {
   if (!bgImg) return;
-  const courseName = getSafeCourseName();
+  const courseName = requireCourseName('statusMsg');
+  if (!courseName) return;
   const zipName = `${courseName}-${zipSuffix}.zip`;
   setSplashStatus('working', 'Rendering images…');
   showSplashProgress(true);
@@ -1022,7 +1095,7 @@ async function runSplashExport(indices, zipSuffix) {
     setSplashProgress((done / total) * 88);
     const c1 = document.createElement('canvas');
     drawIconCanvas(c1, 180, 180, false);
-    files.push({ name: 'app-icon.png', bytes: await encodePNGCompressed(c1) });
+    files.push({ name: 'app-icon.png', bytes: encodeOpaquePNG(c1) }); // store-safe: RGB, no alpha channel
     await new Promise(r => setTimeout(r, 10));
 
     setSplashStatus('working', `Processing ${++done}/${total}: main-logo.png…`);
@@ -1116,8 +1189,14 @@ function drawIconCanvas(canvas, w, h, transparent) {
   else { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); }
   if (iconLogoImg) {
     const pct = getVal('iconLogoSize') / 100;
-    const lw = w * pct, lh = lw * (iconLogoImg.height / iconLogoImg.width);
+    // Contain-fit: scale so the logo fits within pct of BOTH dimensions,
+    // preserving aspect ratio. Sizing by width alone clipped tall logos on
+    // the 180×180 icon and overflowed the 990×495 frame with square ones.
+    const s = Math.min((w * pct) / iconLogoImg.width, (h * pct) / iconLogoImg.height);
+    const lw = iconLogoImg.width * s, lh = iconLogoImg.height * s;
     const cx = (getVal('iconPosX') / 100) * w, cy = (getVal('iconPosY') / 100) * h;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(iconLogoImg, cx - lw / 2, cy - lh / 2, lw, lh);
   }
 }
@@ -1149,11 +1228,13 @@ document.getElementById('iconExportBtn').addEventListener('click', async () => {
   if (!iconLogoImg) return;
   const btn = document.getElementById('iconExportBtn');
   const st = document.getElementById('iconStatus');
-  const courseName = getSafeCourseName();
+  const courseName = requireCourseName('iconStatus');
+  if (!courseName) return;
   btn.disabled = true; st.textContent = 'Encoding…'; st.className = 'status-bar working';
   const c1 = document.createElement('canvas'), c2 = document.createElement('canvas');
   drawIconCanvas(c1, 180, 180, false); drawIconCanvas(c2, 990, 495, true);
-  const [b1, b2] = await Promise.all([encodePNGCompressed(c1), encodePNGCompressed(c2)]);
+  const b1 = encodeOpaquePNG(c1); // store-safe: RGB, no alpha channel
+  const b2 = await encodePNGCompressed(c2); // main-logo keeps transparency by design
   await downloadZip([{ name: 'app-icon.png', bytes: b1 }, { name: 'main-logo.png', bytes: b2 }], `${courseName}-icons.zip`);
   btn.disabled = false; st.textContent = `Exported ${courseName}-icons.zip`; st.className = 'status-bar ok';
 });
@@ -1303,7 +1384,8 @@ setupDropZone(document.getElementById('cropImgZone'), loadCropImg);
 document.getElementById('cropExportBtn').addEventListener('click', async () => {
   if (!cropImg) return;
   const st = document.getElementById('cropStatus');
-  const courseName = getSafeCourseName();
+  const courseName = requireCourseName('cropStatus');
+  if (!courseName) return;
   st.textContent = 'Rendering…'; st.className = 'status-bar working';
   const out = document.createElement('canvas');
   out.width = CROP_W; out.height = CROP_H;
