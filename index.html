@@ -90,6 +90,7 @@ header h1{font-family:var(--font-display);font-size:17px;font-weight:600;letter-
 /* ── Upload zones ── */
 .upload-zone{border:1.5px dashed var(--border-strong);border-radius:var(--radius);padding:22px;text-align:center;cursor:pointer;position:relative;transition:background var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet)}
 .upload-zone:hover{background:var(--accent-subtle);border-color:var(--accent)}
+.upload-zone:has(input:focus-visible){border-color:var(--accent);box-shadow:var(--ring);background:var(--accent-subtle)}
 .upload-zone.has-file{border-style:solid;border-color:var(--border-med)}
 .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .upload-zone .ico{font-size:22px;margin-bottom:6px;color:var(--accent);line-height:1}
@@ -260,7 +261,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
     <div class="card">
       <div class="card-title">Background image</div>
       <div class="upload-zone" id="bgZone">
-        <input type="file" accept="image/*" id="bgInput">
+        <input type="file" accept="image/*" id="bgInput" aria-label="Upload background image">
         <div id="bgContent"><div class="ico">◇</div><p>Click or drop course photo</p></div>
       </div>
       <!-- Fit mode -->
@@ -279,7 +280,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
     <div class="card">
       <div class="card-title">Logo overlay</div>
       <div class="upload-zone" id="logoZone">
-        <input type="file" accept="image/*" id="logoInput">
+        <input type="file" accept="image/*" id="logoInput" aria-label="Upload logo image">
         <div id="logoContent"><div class="ico">◈</div><p>Click or drop logo (PNG recommended)</p></div>
       </div>
       <div id="logoControls" style="display:none">
@@ -385,7 +386,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
     <div class="card">
       <div class="card-title">Logo image</div>
       <div class="upload-zone" id="iconLogoZone">
-        <input type="file" accept="image/*" id="iconLogoInput">
+        <input type="file" accept="image/*" id="iconLogoInput" aria-label="Upload app logo image">
         <div id="iconLogoContent"><div class="ico">◈</div><p>Click or drop logo (PNG with transparency recommended)</p></div>
       </div>
     </div>
@@ -455,7 +456,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
     <div class="card">
       <div class="card-title">Source image</div>
       <div class="upload-zone" id="cropImgZone">
-        <input type="file" accept="image/*" id="cropImgInput">
+        <input type="file" accept="image/*" id="cropImgInput" aria-label="Upload image to crop">
         <div id="cropImgContent"><div class="ico">▭</div><p>Click or drop image to crop</p></div>
       </div>
       <div class="ctrl-group" style="margin-top:14px">
@@ -1142,7 +1143,7 @@ function loadBgImg(file) {
   loadImg(file, img => {
     bgImg = img;
     document.getElementById('bgZone').classList.add('has-file'); document.getElementById('bgZone').classList.remove('has-error');
-    document.getElementById('bgContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('bgContent').innerHTML = `<img src="${img.src}" alt="" class="preview-thumb"><p>${file.name}</p>`;
     splashUpdateBtns(); splashRender();
   }, msg => showUploadError('bgZone', 'bgContent', msg));
 }
@@ -1153,7 +1154,7 @@ function loadLogoImg(file) {
   loadImg(file, img => {
     logoImg = img;
     document.getElementById('logoZone').classList.add('has-file'); document.getElementById('logoZone').classList.remove('has-error');
-    document.getElementById('logoContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('logoContent').innerHTML = `<img src="${img.src}" alt="" class="preview-thumb"><p>${file.name}</p>`;
     document.getElementById('logoControls').style.display = 'block';
     splashRender();
   }, msg => showUploadError('logoZone', 'logoContent', msg));
@@ -1210,7 +1211,7 @@ function loadIconLogoImg(file) {
   loadImg(file, img => {
     iconLogoImg = img;
     document.getElementById('iconLogoZone').classList.add('has-file'); document.getElementById('iconLogoZone').classList.remove('has-error');
-    document.getElementById('iconLogoContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('iconLogoContent').innerHTML = `<img src="${img.src}" alt="" class="preview-thumb"><p>${file.name}</p>`;
     document.getElementById('iconExportBtn').disabled = false;
     drawIconPreviews(); updateIconIncludedMsg();
   }, msg => showUploadError('iconLogoZone', 'iconLogoContent', msg));
@@ -1371,7 +1372,7 @@ function loadCropImg(file) {
   loadImg(file, img => {
     cropImg = img;
     document.getElementById('cropImgZone').classList.add('has-file'); document.getElementById('cropImgZone').classList.remove('has-error');
-    document.getElementById('cropImgContent').innerHTML = `<img src="${img.src}" class="preview-thumb"><p>${file.name}</p>`;
+    document.getElementById('cropImgContent').innerHTML = `<img src="${img.src}" alt="" class="preview-thumb"><p>${file.name}</p>`;
     document.getElementById('cropNoImg').style.display = 'none';
     document.getElementById('cropFrameWrap').style.display = 'block';
     document.getElementById('cropExportBtn').disabled = false;
