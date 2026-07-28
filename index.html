@@ -1036,10 +1036,14 @@ function splashRender() {
   const s = SIZES[activeIdx];
   const scale = Math.min(680 / s.w, 280 / s.h, 1);
   const pw = Math.round(s.w * scale), ph = Math.round(s.h * scale);
-  const off = document.createElement('canvas');
-  drawSplash(off, s.w, s.h);
-  cv.width = pw; cv.height = ph;
-  cv.getContext('2d').drawImage(off, 0, 0, pw, ph);
+  // Performance optimization: Render at full resolution directly to the preview canvas
+  // and use CSS to scale it down. This avoids creating/discarding large offscreen
+  // canvases on every render while maintaining layout accuracy.
+  cv.width = s.w;
+  cv.height = s.h;
+  cv.style.width = pw + 'px';
+  cv.style.height = ph + 'px';
+  drawSplash(cv, s.w, s.h);
   lbl.textContent = `${s.name} — ${s.w}×${s.h}px`;
 }
 
