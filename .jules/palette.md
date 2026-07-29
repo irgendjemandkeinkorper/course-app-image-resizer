@@ -1,0 +1,3 @@
+## 2024-05-24 - Interactive Accordion Headers
+**Learning:** Using a native `<button>` element for an interactive accordion header instead of a `<div>` with a click handler is crucial for keyboard accessibility out of the box, but it requires overriding default button styles (like background, border, and padding) to match the custom design.
+**Action:** Always use `<button>` for clickable headers/accordions and apply a style reset (`width: 100%; background: none; border: none; padding: 0; font: inherit; outline: none;`) along with proper `:focus-visible` styling and ARIA attributes (`aria-expanded`, `aria-controls`).

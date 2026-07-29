@@ -164,7 +164,8 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
 
 /* ── Templates card ── */
 .templates-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
-.templates-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.templates-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;width:100%;background:none;border:none;padding:0;font:inherit;outline:none}
+.templates-header:focus-visible{outline:2px solid transparent;box-shadow:var(--ring);border-radius:var(--radius-sm)}
 .templates-header h3{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:var(--tracking-eyebrow);display:flex;align-items:center;gap:6px}
 .templates-chevron{font-size:11px;color:var(--text-hint);transition:transform var(--duration-base) var(--ease-out-quiet)}
 .templates-chevron.open{transform:rotate(180deg)}
@@ -238,13 +239,13 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
 
   <!-- Templates -->
   <div class="templates-card" id="templatesCard">
-    <div class="templates-header" id="templatesToggle">
+    <button class="templates-header" id="templatesToggle" aria-expanded="false" aria-controls="templatesBody">
       <h3>
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="opacity:.6"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
         Saved templates
       </h3>
       <span class="templates-chevron" id="templatesChevron">▼</span>
-    </div>
+    </button>
     <div class="templates-body" id="templatesBody" style="display:none">
       <div class="template-save-row">
         <input class="template-name-input" type="text" id="templateNameInput" placeholder="Template name, e.g. dark-bg-small-logo" maxlength="60">
@@ -860,12 +861,13 @@ document.getElementById('templateSaveBtn').addEventListener('click', () => {
   renderTemplateList();
 });
 
-document.getElementById('templatesToggle').addEventListener('click', () => {
+document.getElementById('templatesToggle').addEventListener('click', function() {
   const body = document.getElementById('templatesBody');
   const chevron = document.getElementById('templatesChevron');
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
   chevron.classList.toggle('open', !open);
+  this.setAttribute('aria-expanded', !open);
   if (!open) renderTemplateList();
 });
 
