@@ -975,7 +975,9 @@ function buildTable() {
 }
 
 function drawSplash(canvas, w, h) {
-  canvas.width = w; canvas.height = h;
+  // We should NOT reset canvas.width and canvas.height here, as that clears the scale
+  // context set by the caller (splashRender). Setting dimensions here breaks the
+  // scaling optimization.
   const ctx = canvas.getContext('2d');
 
   if (bgImg) {
@@ -1037,14 +1039,20 @@ function splashRender() {
   const s = SIZES[activeIdx];
   const scale = Math.min(680 / s.w, 280 / s.h, 1);
   const pw = Math.round(s.w * scale), ph = Math.round(s.h * scale);
-  // Performance optimization: Render at full resolution directly to the preview canvas
-  // and use CSS to scale it down. This avoids creating/discarding large offscreen
-  // canvases on every render while maintaining layout accuracy.
-  cv.width = s.w;
-  cv.height = s.h;
+  // Performance optimization: Render at exact device preview resolution to avoid
+  // heavy pixel fillrate when adjusting sliders, while keeping the layout accurate.
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = pw * dpr;
+  cv.height = ph * dpr;
   cv.style.width = pw + 'px';
   cv.style.height = ph + 'px';
+
+  // Scale context so drawSplash coordinates work correctly for the target size
+  const ctx = cv.getContext('2d');
+  ctx.save();
+  ctx.scale((pw * dpr) / s.w, (ph * dpr) / s.h);
   drawSplash(cv, s.w, s.h);
+  ctx.restore();
   lbl.textContent = `${s.name} — ${s.w}×${s.h}px`;
 }
 
@@ -1086,6 +1094,7 @@ async function runSplashExport(indices, zipSuffix) {
     setSplashStatus('working', `Processing ${++done}/${total}: ${s.file}.png…`);
     setSplashProgress((done / total) * 88);
     const off = document.createElement('canvas');
+    off.width = s.w; off.height = s.h; // Set dimensions explicitly since drawSplash no longer does
     drawSplash(off, s.w, s.h);
     const pngCheck = UPNG.encode([off.getContext('2d').getImageData(0,0,off.width,off.height).data.buffer], off.width, off.height, 0);
     if (pngCheck.byteLength > SIZE_LIMIT) largeFound = true;
