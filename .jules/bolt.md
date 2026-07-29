@@ -1,3 +1,6 @@
 ## 2024-03-24 - Canvas Scaling Optimization
 **Learning:** Rendering directly to a high-resolution on-screen canvas and scaling it down via CSS (`style.width`/`style.height`) is significantly faster and less memory-intensive than creating full-resolution offscreen canvases and scaling them down via `drawImage`. It also preserves layout logic that relies on exact pixel coordinates (e.g. logos and margins).
 **Action:** When creating image previews, avoid temporary offscreen canvases unless strictly necessary for multi-step composition. Use CSS scaling for visual previews while maintaining the intrinsic canvas resolution required by the drawing logic.
+## 2025-02-18 - Preview Canvas Rendering Performance
+**Learning:** Rendering a massive canvas (e.g., 2160x3840 for XXXHDPI) and relying on CSS to scale it down for a preview creates a severe main-thread bottleneck. It forces the browser to process millions of pixels on every render tick, causing terrible lag when interacting with real-time controls like sliders.
+**Action:** Always render preview canvases at their exact target display resolution (accounting for `window.devicePixelRatio`). Use `ctx.scale()` before calling drawing functions so that the layout logic (which expects original dimensions) still works correctly, while drastically reducing pixel fillrate and ensuring smooth 60fps interactions.
