@@ -42,7 +42,7 @@
   --ring:0 0 0 3px rgba(63,106,67,0.35);
   color-scheme:light;
 }
-@media(prefers-color-scheme:dark){:root{
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#191a15;--bg-subtle:#21231c;--surface:#22241d;--surface-raised:#2b2d24;
   --border:rgba(245,243,235,0.10);--border-med:rgba(245,243,235,0.18);--border-strong:rgba(245,243,235,0.30);
   --text:#ecebe2;--text-muted:#b7b6a8;--text-hint:#8f8f80;
@@ -57,93 +57,108 @@
   --ring:0 0 0 3px rgba(127,175,128,0.35);
   color-scheme:dark;
 }}
+:root[data-theme="dark"]{
+  --bg:#191a15;--bg-subtle:#21231c;--surface:#22241d;--surface-raised:#2b2d24;
+  --border:rgba(245,243,235,0.10);--border-med:rgba(245,243,235,0.18);--border-strong:rgba(245,243,235,0.30);
+  --text:#ecebe2;--text-muted:#b7b6a8;--text-hint:#8f8f80;
+  --accent:#7faf80;--accent-hover:#97c197;--accent-active:#b0d3af;
+  --accent-contrast:#12140c;--accent-subtle:#22301f;--accent-border:rgba(127,175,128,0.34);
+  --blue:#8fb6cf;--blue-bg:#1e2a30;
+  --warn:#e0b566;--warn-bg:#2b2413;
+  --danger:#e79c90;--danger-bg:#2c1c18;
+  --success:#8fcea4;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.38);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.44);
+  --ring:0 0 0 3px rgba(127,175,128,0.35);
+  color-scheme:dark;
+}
 @media(prefers-reduced-motion:reduce){:root{--duration-fast:0ms;--duration-base:0ms}}
 
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:16px;line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
 :where(button,input,select,textarea,[tabindex]):focus-visible{outline:2px solid transparent;box-shadow:var(--ring)}
 input[type=checkbox]{accent-color:var(--accent)}
 
 /* ── Header ── */
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:10;flex-wrap:wrap}
-.h-brand{display:flex;align-items:center;gap:10px;padding:13px 0;margin-right:24px;flex-shrink:0}
+.h-brand{display:flex;align-items:center;gap:10px;padding:14px 0;margin-right:24px;flex-shrink:0}
 .brand-mark{width:22px;height:22px;border-radius:var(--radius-full);background:radial-gradient(circle at 32% 30%,var(--accent),var(--accent-active));box-shadow:var(--shadow-sm);flex-shrink:0}
-header h1{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:-0.01em;white-space:nowrap}
-.h-course{display:flex;align-items:center;gap:8px;padding:10px 0;margin-right:20px;border-right:1px solid var(--border);padding-right:20px}
-.h-course label{font-size:12px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
-.h-course input{font:inherit;font-size:13px;padding:5px 10px;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);width:200px;outline:none;transition:border-color var(--duration-fast) var(--ease-out-quiet)}
+header h1{font-family:var(--font-display);font-size:18px;font-weight:600;letter-spacing:-0.01em;white-space:nowrap}
+.h-course{display:flex;align-items:center;gap:8px;padding:11px 0;margin-right:20px;border-right:1px solid var(--border);padding-right:20px}
+.h-course label{font-size:13px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
+.h-course input{font:inherit;font-size:15px;padding:7px 12px;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);width:220px;outline:none;transition:border-color var(--duration-fast) var(--ease-out-quiet)}
 .h-course input:focus{border-color:var(--accent);box-shadow:var(--ring)}
 .h-course input::placeholder{color:var(--text-hint)}
 .h-course input.input-error{border-color:var(--danger)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 25%,transparent)}
 .tabs{display:flex;gap:0;height:100%}
-.tab-btn{font:inherit;font-size:13px;padding:16px 17px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
+.tab-btn{font:inherit;font-size:15px;padding:18px 20px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
 .tab-btn:hover{color:var(--text)}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
 
 /* ── Layout ── */
 .page{display:none}.page.active{display:block}
-.main{max-width:1100px;margin:0 auto;padding:24px 20px 64px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:var(--shadow-sm)}
-.card-title{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:var(--tracking-eyebrow);margin-bottom:10px}
+.main{max-width:1240px;margin:0 auto;padding:26px 22px 68px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:21px 23px;box-shadow:var(--shadow-sm)}
+.card-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:var(--tracking-eyebrow);margin-bottom:11px}
 
 /* ── Upload zones ── */
-.upload-zone{border:1.5px dashed var(--border-strong);border-radius:var(--radius);padding:22px;text-align:center;cursor:pointer;position:relative;transition:background var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet)}
+.upload-zone{border:1.5px dashed var(--border-strong);border-radius:var(--radius);padding:25px;text-align:center;cursor:pointer;position:relative;transition:background var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet)}
 .upload-zone:hover{background:var(--accent-subtle);border-color:var(--accent)}
 .upload-zone:has(input:focus-visible){border-color:var(--accent);box-shadow:var(--ring);background:var(--accent-subtle)}
 .upload-zone.has-file{border-style:solid;border-color:var(--border-med)}
 .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.upload-zone .ico{font-size:22px;margin-bottom:6px;color:var(--accent);line-height:1}
-.upload-zone p{font-size:13px;color:var(--text-muted)}
+.upload-zone .ico{font-size:25px;margin-bottom:7px;color:var(--accent);line-height:1}
+.upload-zone p{font-size:14px;color:var(--text-muted)}
 .upload-zone.has-file p{color:var(--text);font-weight:500}
-.preview-thumb{width:100%;height:72px;object-fit:contain;margin-bottom:6px;border-radius:4px}
+.preview-thumb{width:100%;height:78px;object-fit:contain;margin-bottom:7px;border-radius:4px}
 
 /* ── Controls ── */
-.ctrl-group{margin-top:12px}
-.ctrl-label{font-size:12px;color:var(--text-muted);margin-bottom:5px}
-.slider-row{display:flex;align-items:center;gap:8px}
+.ctrl-group{margin-top:13px}
+.ctrl-label{font-size:13px;color:var(--text-muted);margin-bottom:6px}
+.slider-row{display:flex;align-items:center;gap:9px}
 .slider-row input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
-.num-box{font:inherit;width:50px;flex-shrink:0;padding:3px 5px;font-size:12px;text-align:center;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);-moz-appearance:textfield}
+.num-box{font:inherit;width:55px;flex-shrink:0;padding:4px 6px;font-size:13px;text-align:center;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);-moz-appearance:textfield}
 .num-box::-webkit-inner-spin-button,.num-box::-webkit-outer-spin-button{-webkit-appearance:none}
 .num-box:focus{outline:none;border-color:var(--accent);box-shadow:var(--ring)}
-.unit{font-size:11px;color:var(--text-hint);flex-shrink:0}
-.swatch-row{display:flex;align-items:center;gap:8px;margin-top:8px}
-.swatch-row label{font-size:12px;color:var(--text-muted);min-width:90px}
-input[type=color]{width:36px;height:28px;border:1px solid var(--border-med);border-radius:var(--radius-sm);cursor:pointer;padding:2px;background:var(--surface)}
-.dir-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.dir-btn{font:inherit;font-size:11px;padding:4px 9px;border:1px solid var(--border-med);border-radius:var(--radius-full);background:transparent;color:var(--text-muted);cursor:pointer;transition:background var(--duration-fast) var(--ease-out-quiet),color var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet)}
+.unit{font-size:12px;color:var(--text-hint);flex-shrink:0}
+.swatch-row{display:flex;align-items:center;gap:9px;margin-top:9px}
+.swatch-row label{font-size:13px;color:var(--text-muted);min-width:98px}
+input[type=color]{width:39px;height:31px;border:1px solid var(--border-med);border-radius:var(--radius-sm);cursor:pointer;padding:2px;background:var(--surface)}
+.dir-row{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.dir-btn{font:inherit;font-size:12px;padding:5px 10px;border:1px solid var(--border-med);border-radius:var(--radius-full);background:transparent;color:var(--text-muted);cursor:pointer;transition:background var(--duration-fast) var(--ease-out-quiet),color var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet)}
 .dir-btn:hover{border-color:var(--accent);color:var(--accent)}
 .dir-btn.active{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent)}
 
 /* ── Fit mode toggle ── */
-.fit-toggle{display:flex;gap:0;margin-top:10px;border:1px solid var(--border-med);border-radius:var(--radius-full);overflow:hidden;width:fit-content;background:var(--bg)}
-.fit-btn{font:inherit;font-size:11px;padding:4px 11px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:background var(--duration-fast) var(--ease-out-quiet),color var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
+.fit-toggle{display:flex;gap:0;margin-top:11px;border:1px solid var(--border-med);border-radius:var(--radius-full);overflow:hidden;width:fit-content;background:var(--bg)}
+.fit-btn{font:inherit;font-size:12px;padding:5px 12px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:background var(--duration-fast) var(--ease-out-quiet),color var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
 .fit-btn:hover{color:var(--text)}
 .fit-btn.active{background:var(--accent);color:var(--accent-contrast)}
-.fit-pad-color{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--text-muted)}
+.fit-pad-color{display:flex;align-items:center;gap:9px;margin-top:9px;font-size:13px;color:var(--text-muted)}
 
 /* ── Table ── */
 .table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:7px 8px;color:var(--text-muted);border-bottom:1px solid var(--border-med);font-weight:500;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:0.04em}
-td{padding:5px 8px;border-bottom:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:8px 9px;color:var(--text-muted);border-bottom:1px solid var(--border-med);font-weight:500;white-space:nowrap;font-size:12px;text-transform:uppercase;letter-spacing:0.04em}
+td{padding:6px 9px;border-bottom:1px solid var(--border)}
 tr.active-row td{background:var(--accent-subtle)}
 tr:hover td{background:var(--bg-subtle);cursor:pointer}
-.fname-input{font:inherit;width:100%;padding:3px 6px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)}
+.fname-input{font:inherit;width:100%;padding:4px 7px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)}
 .fname-input:focus{outline:none;border-color:var(--accent);box-shadow:var(--ring)}
-.ext{color:var(--text-hint);font-size:11px}
-.badge-warn{font-size:10px;font-weight:500;padding:1px 7px;border-radius:var(--radius-full);background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);margin-left:4px;vertical-align:middle}
+.ext{color:var(--text-hint);font-size:12px}
+.badge-warn{font-size:11px;font-weight:500;padding:1px 8px;border-radius:var(--radius-full);background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);margin-left:4px;vertical-align:middle}
 
 /* ── Preview ── */
-.preview-area{background:var(--bg-subtle);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;min-height:200px;overflow:hidden;margin-top:12px;position:relative}
-.preview-area canvas{display:block;max-width:100%;max-height:280px;border-radius:4px}
-.preview-label{position:absolute;bottom:8px;left:8px;font-size:11px;background:rgba(25,25,21,.62);color:#fff;padding:2px 8px;border-radius:var(--radius-full)}
-.no-img{font-size:13px;color:var(--text-hint);text-align:center;padding:2rem}
+.preview-area{background:var(--bg-subtle);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;min-height:215px;overflow:hidden;margin-top:13px;position:relative}
+.preview-area canvas{display:block;max-width:100%;max-height:300px;border-radius:4px}
+.preview-label{position:absolute;bottom:8px;left:8px;font-size:12px;background:rgba(25,25,21,.62);color:#fff;padding:2px 8px;border-radius:var(--radius-full)}
+.no-img{font-size:14px;color:var(--text-hint);text-align:center;padding:2rem}
 
 /* ── Action bar ── */
-.action-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.btn-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button{font:inherit;font-size:13px;font-weight:500;padding:7px 15px;border:1px solid var(--border-med);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer;transition:background var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet),transform var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
+.action-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;margin-bottom:11px}
+.btn-group{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-size:15px;font-weight:500;padding:9px 17px;border:1px solid var(--border-med);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer;transition:background var(--duration-fast) var(--ease-out-quiet),border-color var(--duration-fast) var(--ease-out-quiet),transform var(--duration-fast) var(--ease-out-quiet);white-space:nowrap}
 button:hover{background:var(--bg-subtle);border-color:var(--border-strong)}
 button:active{transform:translateY(0.5px)}
 button:disabled{opacity:.45;cursor:default;transform:none}
@@ -153,60 +168,73 @@ button.primary:active{background:var(--accent-active)}
 button.primary:disabled{opacity:.45;background:var(--accent)}
 button.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
 button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
-.status-bar{font-size:12px;color:var(--text-muted);min-height:20px;margin-top:6px}
+.status-bar{font-size:13px;color:var(--text-muted);min-height:20px;margin-top:7px}
 .status-bar.ok{color:var(--success)}
 .status-bar.working{color:var(--blue)}
 .status-bar.err{color:var(--danger)}
 .progress-wrap{width:100%;height:5px;background:var(--border-med);border-radius:var(--radius-full);margin-top:6px;display:none;overflow:hidden}
 .progress-fill{height:100%;background:var(--accent);border-radius:var(--radius-full);transition:width var(--duration-fast) var(--ease-out-quiet);width:0%}
-.note{font-size:12px;color:var(--warn);background:var(--warn-bg);border:1px solid transparent;border-radius:var(--radius);padding:9px 13px;margin-top:10px;display:none}
-.info-note{font-size:12px;color:var(--blue);background:var(--blue-bg);border:1px solid transparent;border-radius:var(--radius);padding:9px 13px;margin-bottom:12px}
+.note{font-size:13px;color:var(--warn);background:var(--warn-bg);border:1px solid transparent;border-radius:var(--radius);padding:10px 14px;margin-top:11px;display:none}
+.info-note{font-size:13px;color:var(--blue);background:var(--blue-bg);border:1px solid transparent;border-radius:var(--radius);padding:10px 14px;margin-bottom:13px}
 
 /* ── Templates card ── */
-.templates-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.templates-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 22px;margin-bottom:18px;box-shadow:var(--shadow-sm)}
 .templates-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;width:100%;background:none;border:none;padding:0;font:inherit;outline:none}
 .templates-header:focus-visible{outline:2px solid transparent;box-shadow:var(--ring);border-radius:var(--radius-sm)}
-.templates-header h3{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:var(--tracking-eyebrow);display:flex;align-items:center;gap:6px}
-.templates-chevron{font-size:11px;color:var(--text-hint);transition:transform var(--duration-base) var(--ease-out-quiet)}
+.templates-header h3{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:var(--tracking-eyebrow);display:flex;align-items:center;gap:6px}
+.templates-chevron{font-size:12px;color:var(--text-hint);transition:transform var(--duration-base) var(--ease-out-quiet)}
 .templates-chevron.open{transform:rotate(180deg)}
-.templates-body{margin-top:12px}
-.template-save-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.template-name-input{font:inherit;flex:1;min-width:180px;padding:6px 11px;font-size:13px;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;transition:border-color var(--duration-fast) var(--ease-out-quiet)}
+.templates-body{margin-top:13px}
+.template-save-row{display:flex;gap:9px;align-items:center;margin-bottom:13px;flex-wrap:wrap}
+.template-name-input{font:inherit;flex:1;min-width:180px;padding:7px 12px;font-size:14px;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;transition:border-color var(--duration-fast) var(--ease-out-quiet)}
 .template-name-input:focus{border-color:var(--accent);box-shadow:var(--ring)}
 .template-name-input::placeholder{color:var(--text-hint)}
-.template-list{display:flex;flex-direction:column;gap:6px}
-.template-item{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)}
-.template-item-name{flex:1;font-size:13px;font-weight:500}
-.template-item-meta{font-size:11px;color:var(--text-hint)}
-.template-empty{font-size:12px;color:var(--text-hint);text-align:center;padding:16px}
+.template-list{display:flex;flex-direction:column;gap:7px}
+.template-item{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)}
+.template-item-name{flex:1;font-size:14px;font-weight:500}
+.template-item-meta{font-size:12px;color:var(--text-hint)}
+.template-empty{font-size:13px;color:var(--text-hint);text-align:center;padding:17px}
 
 /* ── Icon/Logo tab ── */
-.icon-previews{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
-.icon-preview-box{background:var(--bg-subtle);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:8px}
+.icon-previews{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-top:17px}
+.icon-preview-box{background:var(--bg-subtle);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:17px;gap:9px}
 .icon-canvas-wrap{display:flex;align-items:center;justify-content:center}
 .icon-canvas-wrap canvas{border-radius:4px;border:1px solid var(--border)}
-.icon-dim-label{font-size:11px;color:var(--text-muted)}
+.icon-dim-label{font-size:12px;color:var(--text-muted)}
 
 /* ── Crop tab ── */
 .crop-frame{position:relative;overflow:hidden;border:2px solid var(--accent);border-radius:var(--radius-sm);cursor:grab;background:#111}
 .crop-frame.dragging{cursor:grabbing}
 .crop-frame canvas{display:block;position:absolute;top:0;left:0;pointer-events:none}
-.crop-hint{font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center}
-.crop-no-img{font-size:13px;color:var(--text-hint);text-align:center;padding:3rem 1rem}
+.crop-hint{font-size:13px;color:var(--text-muted);margin-top:9px;text-align:center}
+.crop-no-img{font-size:14px;color:var(--text-hint);text-align:center;padding:3rem 1rem}
 
 /* ── Icon included indicator ── */
-.icon-included{font-size:11px;color:var(--success);display:flex;align-items:center;gap:4px}
-.icon-not-included{font-size:11px;color:var(--text-hint);display:flex;align-items:center;gap:4px}
+.icon-included{font-size:12px;color:var(--success);display:flex;align-items:center;gap:4px}
+.icon-not-included{font-size:12px;color:var(--text-hint);display:flex;align-items:center;gap:4px}
+
+/* ── Form fields (History import, Rejection Library) ── */
+.field-input,.field-select,.field-textarea{font:inherit;width:100%;padding:8px 12px;font-size:14px;border:1px solid var(--border-med);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;transition:border-color var(--duration-fast) var(--ease-out-quiet)}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--accent);box-shadow:var(--ring)}
+.field-textarea{resize:vertical}
+.lib-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.lib-card-head{display:flex;justify-content:space-between;width:100%;gap:9px;align-items:center}
+.lib-badge{font-size:11px;padding:1px 8px;border-radius:var(--radius-full);border:1px solid;margin-left:6px;flex-shrink:0}
+.theme-toggle-btn{padding:6px 10px;font-size:16px;line-height:1;background:transparent;box-shadow:none}
+.check-row{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-muted);cursor:pointer}
+.check-row input[type=checkbox]{cursor:pointer}
+.small-btn{font-size:13px;padding:6px 12px}
+.small-btn-tight{font-size:13px;padding:6px 10px}
 
 @media(max-width:640px){
   .grid2,.grid3{grid-template-columns:1fr}
   .icon-previews{grid-template-columns:1fr}
   header{flex-direction:column;align-items:stretch}
-  .h-brand{padding:12px 16px;margin-right:0}
-  .h-course{padding:10px 16px;margin-right:0;border-right:none;border-bottom:1px solid var(--border)}
+  .h-brand{padding:14px 18px;margin-right:0}
+  .h-course{padding:11px 18px;margin-right:0;border-right:none;border-bottom:1px solid var(--border)}
   .h-course input{width:100%}
   .tabs{overflow-x:auto}
-  .tab-btn{padding:12px 14px}
+  .tab-btn{padding:14px 16px}
 }
 .upload-zone.drag-over{background:var(--accent-subtle)!important;border-color:var(--accent)!important;border-style:solid!important}
 .upload-zone.has-error{border-color:var(--danger)!important;border-style:solid!important}
@@ -219,6 +247,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
   <div class="h-brand">
     <span class="brand-mark" aria-hidden="true"></span>
     <h1>Course App Resizer</h1>
+    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" aria-label="Toggle color theme">🌓</button>
   </div>
   <div class="h-course">
     <label for="courseNameInput">Course</label>
@@ -228,6 +257,8 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
     <button class="tab-btn active" data-tab="splash">Splash screens</button>
     <button class="tab-btn" data-tab="icons">App icon &amp; logo</button>
     <button class="tab-btn" data-tab="crop">Header crop</button>
+    <button class="tab-btn" data-tab="history">History</button>
+    <button class="tab-btn" data-tab="library">Rejection library</button>
   </nav>
 </header>
 
@@ -265,6 +296,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
         <input type="file" accept="image/*" id="bgInput" aria-label="Upload background image">
         <div id="bgContent"><div class="ico">◇</div><p>Click or drop course photo</p></div>
       </div>
+      <div class="note" id="bgLowResNote"></div>
       <!-- Fit mode -->
       <div class="ctrl-group">
         <div class="ctrl-label">Image fit</div>
@@ -276,6 +308,12 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
           <span>Padding color</span>
           <input type="color" id="splashPadColor" value="#ffffff" aria-label="Splash padding color">
         </div>
+      </div>
+      <div class="ctrl-group">
+        <label class="check-row">
+          <input type="checkbox" id="safeZoneToggle">
+          Show safe-zone guide (approximate — verify against your target devices)
+        </label>
       </div>
     </div>
     <div class="card">
@@ -466,6 +504,7 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
           <input type="range" id="cropZoom" min="1" max="300" value="100" step="1">
           <input type="number" class="num-box" id="cropZoomN" min="1" max="300" value="100">
           <span class="unit">%</span>
+          <button id="cropUndoBtn" type="button" class="small-btn-tight" disabled title="Undo last crop change (Ctrl/Cmd+Z)">↺ Undo</button>
         </div>
       </div>
       <!-- Crop fit mode -->
@@ -501,6 +540,129 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
       </div>
     </div>
   </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TAB 4 — HISTORY (local batch save/reload)
+════════════════════════════════════════════ -->
+<div class="page" id="tab-history">
+<div class="main">
+  <div class="card">
+    <div class="action-bar">
+      <div>
+        <div class="card-title" style="margin:0">Batch history</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:5px;max-width:640px">Every export from the other tabs is auto-saved here, in this browser only — no account, no server. Load a past batch to restore its images and settings, or export/import a batch as a JSON file to move it between browsers.</div>
+      </div>
+      <div class="btn-group">
+        <button id="historyImportBtn">Import JSON</button>
+        <input type="file" accept=".json,application/json" id="historyImportInput" style="display:none" aria-hidden="true">
+        <button class="danger" id="historyClearBtn">Clear all</button>
+      </div>
+    </div>
+    <div class="status-bar" id="historyStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;margin-top:10px">
+      <input type="text" id="historyFilter" class="field-input" style="max-width:260px" placeholder="Filter by course name…">
+      <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        <div class="status-bar" id="historyStorageMsg" style="margin:0;min-height:auto"></div>
+        <button id="historyCompareBtn" class="small-btn" style="display:none">Compare selected</button>
+      </div>
+    </div>
+    <div id="historyCompare" style="display:none;margin-top:14px"></div>
+    <div class="template-list" id="historyList" style="margin-top:12px"></div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TAB 5 — REJECTION REASON LIBRARY
+════════════════════════════════════════════ -->
+<div class="page" id="tab-library">
+<div class="main">
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Log a rejection reason &amp; response</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+      Submitting opens a pre-filled GitHub Issue on this repo (labeled <code>rejection-reason</code>) in a new tab — review it and click "Submit new issue" on GitHub to actually file it. Nothing is sent automatically.
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="ctrl-label">Platform</div>
+        <select id="libPlatform" class="field-select">
+          <option>Apple App Store</option>
+          <option>Google Play</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <div class="ctrl-label">Outcome</div>
+        <select id="libOutcome" class="field-select">
+          <option>Pending</option>
+          <option>Overturned</option>
+          <option>Upheld</option>
+        </select>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Rejection category</div>
+      <input type="text" id="libCategory" class="field-input" list="libCategoryList" placeholder="e.g. Guideline 4.2 — Minimum Functionality" maxlength="120">
+      <datalist id="libCategoryList">
+        <option value="Guideline 2.1 – App Completeness">
+        <option value="Guideline 4.2 – Minimum Functionality">
+        <option value="Metadata">
+        <option value="Design/UI">
+        <option value="Privacy/Data">
+        <option value="Performance/Crashes">
+        <option value="Other">
+      </datalist>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Reviewer's exact wording</div>
+      <textarea id="libReason" class="field-textarea" rows="3"></textarea>
+      <div id="libSuggestions" style="display:none;margin-top:8px"></div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Our response</div>
+      <textarea id="libResponse" class="field-textarea" rows="4"></textarea>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Submitted by (optional)</div>
+      <input type="text" id="libSubmitter" class="field-input" style="max-width:280px" placeholder="Your name" maxlength="60">
+    </div>
+    <div class="action-bar" style="margin-top:16px;margin-bottom:0">
+      <div class="status-bar" id="libSubmitStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+      <button id="libSubmitBtn" class="primary">Open GitHub issue to submit</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px" id="libDraftsCard">
+    <div class="card-title">My submissions (this browser only)</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Local record of what you've submitted — it doesn't write back to GitHub (no login here). Paste in the issue URL once it's filed to keep track, and update the outcome as you hear back.</div>
+    <div class="template-list" id="libDraftsList"></div>
+  </div>
+
+  <div class="card">
+    <div class="action-bar">
+      <div class="card-title" style="margin:0">Known rejection reasons &amp; responses</div>
+      <div class="btn-group">
+        <select id="libCategoryFilter" class="field-select" style="width:200px">
+          <option value="">All categories</option>
+          <option>Guideline 2.1 – App Completeness</option>
+          <option>Guideline 4.2 – Minimum Functionality</option>
+          <option>Metadata</option>
+          <option>Design/UI</option>
+          <option>Privacy/Data</option>
+          <option>Performance/Crashes</option>
+          <option>Other</option>
+        </select>
+        <input type="text" id="libFilter" class="field-input" style="width:200px" placeholder="Filter…">
+        <button id="libRefreshBtn">Refresh</button>
+      </div>
+    </div>
+    <div class="status-bar" id="libStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="template-list" id="libList" style="margin-top:12px"></div>
+  </div>
+
 </div>
 </div>
 
@@ -730,6 +892,27 @@ courseNameInput.addEventListener('input', () => {
   courseNameInput.classList.remove('input-error');
 });
 
+/* ── Theme toggle (System → Light → Dark) ── */
+const THEME_KEY = 'cai_theme';
+const THEME_ICONS = { system: '🌓', light: '☀️', dark: '🌙' };
+const THEME_LABELS = { system: 'System', light: 'Light', dark: 'Dark' };
+let currentTheme = localStorage.getItem(THEME_KEY) || 'system';
+
+function applyTheme(theme) {
+  if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+  else delete document.documentElement.dataset.theme;
+  const btn = document.getElementById('themeToggleBtn');
+  btn.textContent = THEME_ICONS[theme];
+  btn.title = `Theme: ${THEME_LABELS[theme]} (click to change)`;
+}
+applyTheme(currentTheme);
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  const order = ['system', 'light', 'dark'];
+  currentTheme = order[(order.indexOf(currentTheme) + 1) % order.length];
+  localStorage.setItem(THEME_KEY, currentTheme);
+  applyTheme(currentTheme);
+});
+
 /* ── Course name is required for every export ──
    Exports are named "<course>-…" so files stay identifiable in Downloads;
    an empty name used to silently fall back to "course". */
@@ -755,6 +938,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     updateIconIncludedMsg();
+    if (btn.dataset.tab === 'history') renderHistoryList();
+    if (btn.dataset.tab === 'library') loadRejectionLibrary();
   });
 });
 
@@ -1056,6 +1241,33 @@ function splashRender() {
   drawSplash(cv, s.w, s.h);
   ctx.restore();
   lbl.textContent = `${s.name} — ${s.w}×${s.h}px`;
+  if (document.getElementById('safeZoneToggle').checked) drawSafeZoneGuide(cv);
+}
+
+/* Guide-only overlay — drawn on the live preview canvas AFTER drawSplash/ctx.restore(), never on
+   the offscreen canvases used for actual export (runSplashExport / per-size drawSplash calls). */
+function drawSafeZoneGuide(canvas) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const top = h * 0.12, bottom = h * 0.08, left = w * 0.05, right = w * 0.05;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,70,70,0.9)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(left, top, w - left - right, h - top - bottom);
+  ctx.restore();
+}
+
+function checkBgResolution(img) {
+  const note = document.getElementById('bgLowResNote');
+  const maxW = Math.max(...SIZES.map(s => s.w));
+  const maxH = Math.max(...SIZES.map(s => s.h));
+  if (img.naturalWidth < maxW || img.naturalHeight < maxH) {
+    note.textContent = `⚠ This image is ${img.naturalWidth}×${img.naturalHeight}px — smaller than the largest export size (${maxW}×${maxH}px). It'll be upscaled for that size and may look soft.`;
+    note.style.display = 'block';
+  } else {
+    note.style.display = 'none';
+  }
 }
 
 function splashUpdateBtns() {
@@ -1127,6 +1339,7 @@ async function runSplashExport(indices, zipSuffix) {
   setSplashProgress(100); setTimeout(() => showSplashProgress(false), 700);
   setSplashStatus('ok', `Done — ${files.length} file${files.length !== 1 ? 's' : ''} saved to ${zipName}`);
   if (largeFound) document.getElementById('largeNote').style.display = 'block';
+  saveHistoryEntry('splash');
 }
 
 document.getElementById('exportAllBtn').addEventListener('click', () => runSplashExport(SIZES.map((_, i) => i), 'app-images'));
@@ -1159,11 +1372,19 @@ function loadBgImg(file) {
     bgImg = img;
     document.getElementById('bgZone').classList.add('has-file'); document.getElementById('bgZone').classList.remove('has-error');
     document.getElementById('bgContent').innerHTML = `<img src="${img.src}" alt="" class="preview-thumb"><p>${file.name}</p>`;
+    checkBgResolution(img);
     splashUpdateBtns(); splashRender();
   }, msg => showUploadError('bgZone', 'bgContent', msg));
 }
 document.getElementById('bgInput').addEventListener('change', e => { if (e.target.files[0]) loadBgImg(e.target.files[0]); });
 setupDropZone(document.getElementById('bgZone'), loadBgImg);
+
+const safeZoneToggle = document.getElementById('safeZoneToggle');
+safeZoneToggle.checked = localStorage.getItem('cai_safeZone') === '1';
+safeZoneToggle.addEventListener('change', () => {
+  localStorage.setItem('cai_safeZone', safeZoneToggle.checked ? '1' : '0');
+  splashRender();
+});
 
 function loadLogoImg(file) {
   loadImg(file, img => {
@@ -1253,6 +1474,7 @@ document.getElementById('iconExportBtn').addEventListener('click', async () => {
   const b2 = await encodePNGCompressed(c2); // main-logo keeps transparency by design
   await downloadZip([{ name: 'app-icon.png', bytes: b1 }, { name: 'main-logo.png', bytes: b2 }], `${courseName}-icons.zip`);
   btn.disabled = false; st.textContent = `Exported ${courseName}-icons.zip`; st.className = 'status-bar ok';
+  saveHistoryEntry('icons');
 });
 
 /* ══════════════════════════════════════════
@@ -1305,6 +1527,32 @@ function resetCrop() {
   clampCropOffset();
 }
 
+/* ── Undo stack (crop position/zoom only) ── */
+let cropUndoStack = [];
+
+function pushCropUndo() {
+  if (!cropImg) return;
+  const last = cropUndoStack[cropUndoStack.length - 1];
+  if (last && last.cropOffX === cropOffX && last.cropOffY === cropOffY && last.cropZoom === cropZoom) return;
+  cropUndoStack.push({ cropOffX, cropOffY, cropZoom });
+  if (cropUndoStack.length > 20) cropUndoStack.shift();
+  updateCropUndoBtn();
+}
+
+function updateCropUndoBtn() {
+  document.getElementById('cropUndoBtn').disabled = cropUndoStack.length === 0;
+}
+
+function undoCrop() {
+  if (!cropUndoStack.length) return;
+  const prev = cropUndoStack.pop();
+  cropOffX = prev.cropOffX; cropOffY = prev.cropOffY; cropZoom = prev.cropZoom;
+  document.getElementById('cropZoom').value = cropZoom;
+  document.getElementById('cropZoomN').value = cropZoom;
+  clampCropOffset(); drawCrop();
+  updateCropUndoBtn();
+}
+
 function drawCrop() {
   if (!cropImg) return;
   const displayScale = Math.min(1, MAX_FRAME_W / CROP_W);
@@ -1330,6 +1578,7 @@ function drawCrop() {
 
 /* ── Crop fit mode toggle ── */
 document.getElementById('cropFillBtn').addEventListener('click', () => {
+  pushCropUndo();
   cropFitMode = false;
   document.getElementById('cropFillBtn').classList.add('active');
   document.getElementById('cropFitBtn').classList.remove('active');
@@ -1337,6 +1586,7 @@ document.getElementById('cropFillBtn').addEventListener('click', () => {
   if (cropImg) { resetCrop(); drawCrop(); }
 });
 document.getElementById('cropFitBtn').addEventListener('click', () => {
+  pushCropUndo();
   cropFitMode = true;
   document.getElementById('cropFitBtn').classList.add('active');
   document.getElementById('cropFillBtn').classList.remove('active');
@@ -1349,6 +1599,7 @@ document.getElementById('cropPadColor').addEventListener('input', drawCrop);
 const cropFrame = document.getElementById('cropFrame');
 cropFrame.addEventListener('mousedown', e => {
   if (!cropImg) return;
+  pushCropUndo();
   cropDragging = true; cropFrame.classList.add('dragging');
   cropDragStartX = e.clientX; cropDragStartY = e.clientY;
   cropOffXAtDrag = cropOffX; cropOffYAtDrag = cropOffY;
@@ -1365,6 +1616,7 @@ window.addEventListener('mouseup', () => { cropDragging = false; cropFrame.class
 
 cropFrame.addEventListener('touchstart', e => {
   if (!cropImg || !e.touches[0]) return;
+  pushCropUndo();
   cropDragging = true;
   cropDragStartX = e.touches[0].clientX; cropDragStartY = e.touches[0].clientY;
   cropOffXAtDrag = cropOffX; cropOffYAtDrag = cropOffY;
@@ -1380,12 +1632,24 @@ window.addEventListener('touchmove', e => {
 window.addEventListener('touchend', () => { cropDragging = false; });
 
 syncSliderNum('cropZoom', 'cropZoomN', 1, 300);
+document.getElementById('cropZoom').addEventListener('pointerdown', pushCropUndo);
+document.getElementById('cropZoomN').addEventListener('focus', pushCropUndo);
 document.getElementById('cropZoom').addEventListener('input', () => { cropZoom = getVal('cropZoom'); clampCropOffset(); drawCrop(); });
 document.getElementById('cropZoomN').addEventListener('input', () => { cropZoom = getVal('cropZoom'); clampCropOffset(); drawCrop(); });
+
+document.getElementById('cropUndoBtn').addEventListener('click', undoCrop);
+window.addEventListener('keydown', e => {
+  if (!document.getElementById('tab-crop').classList.contains('active')) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    undoCrop();
+  }
+});
 
 function loadCropImg(file) {
   loadImg(file, img => {
     cropImg = img;
+    cropUndoStack = []; updateCropUndoBtn();
     document.getElementById('cropImgZone').classList.add('has-file'); document.getElementById('cropImgZone').classList.remove('has-error');
     document.getElementById('cropImgContent').innerHTML = `<img src="${img.src}" alt="" class="preview-thumb"><p>${file.name}</p>`;
     document.getElementById('cropNoImg').style.display = 'none';
@@ -1417,7 +1681,605 @@ document.getElementById('cropExportBtn').addEventListener('click', async () => {
   const filename = `${courseName}-header-600x200.png`;
   downloadBlob(bytes, filename);
   st.textContent = `Exported ${filename}`; st.className = 'status-bar ok';
+  saveHistoryEntry('crop');
 });
+
+/* ══════════════════════════════════════════
+   TAB 4 — HISTORY (local batch save/reload, IndexedDB)
+══════════════════════════════════════════ */
+const HISTORY_DB_NAME = 'cai_history_db';
+const HISTORY_STORE = 'batches';
+const HISTORY_MAX = 20;
+
+function openHistoryDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('IndexedDB not available in this browser')); return; }
+    const req = indexedDB.open(HISTORY_DB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(HISTORY_STORE, { keyPath: 'id' }); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function historyPut(entry) {
+  const db = await openHistoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HISTORY_STORE, 'readwrite');
+    tx.objectStore(HISTORY_STORE).put(entry);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function historyGetAll() {
+  const db = await openHistoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HISTORY_STORE, 'readonly');
+    const req = tx.objectStore(HISTORY_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function historyDelete(id) {
+  const db = await openHistoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HISTORY_STORE, 'readwrite');
+    tx.objectStore(HISTORY_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function historyClear() {
+  const db = await openHistoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HISTORY_STORE, 'readwrite');
+    tx.objectStore(HISTORY_STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function safeNameFrom(name) {
+  return (name || '').trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-_]/g, '') || 'course';
+}
+
+function buildHistoryEntry(source) {
+  const courseName = getCourseName();
+  const now = Date.now();
+  const settings = { ...getCurrentSettings(), cropZoom, cropOffX, cropOffY };
+  const images = {};
+  if (bgImg) images.bg = bgImg.src;
+  if (logoImg) images.logo = logoImg.src;
+  if (iconLogoImg) images.iconLogo = iconLogoImg.src;
+  if (cropImg) images.crop = cropImg.src;
+  return {
+    id: `${safeNameFrom(courseName)}-${now}-${Math.random().toString(36).slice(2, 8)}`,
+    name: `${courseName} — ${new Date(now).toLocaleString()}`,
+    createdAt: now,
+    courseName,
+    source,
+    settings,
+    images
+  };
+}
+
+async function saveHistoryEntry(source) {
+  try {
+    const entry = buildHistoryEntry(source);
+    await historyPut(entry);
+    const all = await historyGetAll();
+    if (all.length > HISTORY_MAX) {
+      all.sort((a, b) => a.createdAt - b.createdAt);
+      const excess = all.slice(0, all.length - HISTORY_MAX);
+      await Promise.all(excess.map(e => historyDelete(e.id)));
+    }
+    if (document.getElementById('tab-history').classList.contains('active')) renderHistoryList();
+  } catch (e) {
+    console.warn('History auto-save skipped:', e);
+  }
+}
+
+function loadImageFromDataURL(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not restore an image from this batch'));
+    img.src = src;
+  });
+}
+
+async function loadHistoryEntry(entry) {
+  const st = document.getElementById('historyStatus');
+  st.textContent = 'Restoring…'; st.className = 'status-bar working';
+  try {
+    const imgs = entry.images || {};
+    const [bg, logo, iconLogo, crop] = await Promise.all([
+      imgs.bg ? loadImageFromDataURL(imgs.bg) : null,
+      imgs.logo ? loadImageFromDataURL(imgs.logo) : null,
+      imgs.iconLogo ? loadImageFromDataURL(imgs.iconLogo) : null,
+      imgs.crop ? loadImageFromDataURL(imgs.crop) : null,
+    ]);
+
+    if (bg) {
+      bgImg = bg;
+      document.getElementById('bgZone').classList.add('has-file'); document.getElementById('bgZone').classList.remove('has-error');
+      document.getElementById('bgContent').innerHTML = `<img src="${bg.src}" alt="" class="preview-thumb"><p>Restored from history</p>`;
+      checkBgResolution(bg);
+    }
+    if (logo) {
+      logoImg = logo;
+      document.getElementById('logoZone').classList.add('has-file'); document.getElementById('logoZone').classList.remove('has-error');
+      document.getElementById('logoContent').innerHTML = `<img src="${logo.src}" alt="" class="preview-thumb"><p>Restored from history</p>`;
+      document.getElementById('logoControls').style.display = 'block';
+    }
+    if (iconLogo) {
+      iconLogoImg = iconLogo;
+      document.getElementById('iconLogoZone').classList.add('has-file'); document.getElementById('iconLogoZone').classList.remove('has-error');
+      document.getElementById('iconLogoContent').innerHTML = `<img src="${iconLogo.src}" alt="" class="preview-thumb"><p>Restored from history</p>`;
+      document.getElementById('iconExportBtn').disabled = false;
+    }
+    if (crop) {
+      cropImg = crop;
+      cropUndoStack = []; updateCropUndoBtn();
+      document.getElementById('cropImgZone').classList.add('has-file'); document.getElementById('cropImgZone').classList.remove('has-error');
+      document.getElementById('cropImgContent').innerHTML = `<img src="${crop.src}" alt="" class="preview-thumb"><p>Restored from history</p>`;
+      document.getElementById('cropNoImg').style.display = 'none';
+      document.getElementById('cropFrameWrap').style.display = 'block';
+      document.getElementById('cropExportBtn').disabled = false;
+    }
+
+    if (entry.courseName) {
+      document.getElementById('courseNameInput').value = entry.courseName;
+      localStorage.setItem('cai_courseName', entry.courseName);
+    }
+
+    const s = entry.settings || {};
+    if (crop) {
+      buildCropFrame();
+      if (s.cropZoom !== undefined) {
+        cropZoom = s.cropZoom; cropOffX = s.cropOffX || 0; cropOffY = s.cropOffY || 0;
+        document.getElementById('cropZoom').value = cropZoom;
+        document.getElementById('cropZoomN').value = cropZoom;
+      }
+    }
+    applySettings(s);
+    if (crop && s.cropZoom === undefined) { resetCrop(); drawCrop(); }
+
+    splashUpdateBtns();
+    updateIconIncludedMsg();
+    buildTable();
+
+    st.textContent = `Restored "${entry.name}"`; st.className = 'status-bar ok';
+  } catch (e) {
+    st.textContent = 'Restore failed: ' + e.message; st.className = 'status-bar';
+  }
+}
+
+function exportHistoryEntry(entry) {
+  const blob = new Blob([JSON.stringify(entry, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `${safeNameFrom(entry.courseName)}-batch-${entry.createdAt}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+let _historyEntries = [];
+let _historySelected = new Set();
+
+function historyEntrySize(entry) {
+  try { return JSON.stringify(entry).length; } catch (e) { return 0; }
+}
+
+function formatBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+async function updateHistoryStorageMsg() {
+  const el = document.getElementById('historyStorageMsg');
+  const totalBytes = _historyEntries.reduce((sum, e) => sum + historyEntrySize(e), 0);
+  let msg = `~${formatBytes(totalBytes)} across ${_historyEntries.length} batch${_historyEntries.length !== 1 ? 'es' : ''}`;
+  if (navigator.storage && navigator.storage.estimate) {
+    try {
+      const { usage, quota } = await navigator.storage.estimate();
+      if (usage !== undefined && quota) msg += ` · browser storage: ${formatBytes(usage)} of ${formatBytes(quota)}`;
+    } catch (e) { /* estimate() unsupported/blocked — skip the secondary line */ }
+  }
+  el.textContent = msg;
+}
+
+async function renderHistoryList() {
+  const list = document.getElementById('historyList');
+  list.innerHTML = '<div class="template-empty">Loading…</div>';
+  document.getElementById('historyCompare').style.display = 'none';
+  _historySelected = new Set();
+  try { _historyEntries = await historyGetAll(); }
+  catch (e) {
+    list.innerHTML = '<div class="template-empty">History is unavailable in this browser (private/incognito mode may block it).</div>';
+    document.getElementById('historyStorageMsg').textContent = '';
+    return;
+  }
+  _historyEntries.sort((a, b) => b.createdAt - a.createdAt);
+  updateHistoryStorageMsg();
+  renderHistoryListFiltered();
+}
+
+function renderHistoryListFiltered() {
+  const list = document.getElementById('historyList');
+  const filter = (document.getElementById('historyFilter').value || '').trim().toLowerCase();
+  const entries = filter
+    ? _historyEntries.filter(e => (e.name + ' ' + (e.courseName || '')).toLowerCase().includes(filter))
+    : _historyEntries;
+
+  if (!_historyEntries.length) {
+    list.innerHTML = '<div class="template-empty">No saved batches yet — export from any tab to auto-save one here.</div>';
+    updateHistoryCompareBtn();
+    return;
+  }
+  if (!entries.length) {
+    list.innerHTML = '<div class="template-empty">No batches match your filter.</div>';
+    updateHistoryCompareBtn();
+    return;
+  }
+
+  list.innerHTML = '';
+  entries.forEach(entry => {
+    const row = document.createElement('div');
+    row.className = 'template-item';
+    const imgCount = Object.keys(entry.images || {}).length;
+    const sizeLabel = formatBytes(historyEntrySize(entry));
+    row.innerHTML = `
+      <input type="checkbox" class="history-select" ${_historySelected.has(entry.id) ? 'checked' : ''} aria-label="Select ${escapeHtml(entry.name)} for comparison">
+      <div style="flex:1">
+        <div class="template-item-name">${escapeHtml(entry.name)}</div>
+        <div class="template-item-meta">${escapeHtml(entry.source || 'batch')} export · ${imgCount} image${imgCount !== 1 ? 's' : ''} · ${sizeLabel}</div>
+      </div>
+      <button class="small-btn" data-load>Load</button>
+      <button class="small-btn" data-export>Export JSON</button>
+      <button class="danger small-btn-tight" data-del aria-label="Delete ${escapeHtml(entry.name)}">✕</button>
+    `;
+    row.querySelector('.history-select').addEventListener('change', e => {
+      if (e.target.checked) _historySelected.add(entry.id); else _historySelected.delete(entry.id);
+      updateHistoryCompareBtn();
+    });
+    row.querySelector('[data-load]').addEventListener('click', () => loadHistoryEntry(entry));
+    row.querySelector('[data-export]').addEventListener('click', () => exportHistoryEntry(entry));
+    row.querySelector('[data-del]').addEventListener('click', async () => {
+      await historyDelete(entry.id);
+      renderHistoryList();
+    });
+    list.appendChild(row);
+  });
+  updateHistoryCompareBtn();
+}
+
+function updateHistoryCompareBtn() {
+  const btn = document.getElementById('historyCompareBtn');
+  btn.style.display = _historySelected.size === 2 ? 'inline-block' : 'none';
+  if (_historySelected.size !== 2) document.getElementById('historyCompare').style.display = 'none';
+}
+
+function renderHistoryCompare() {
+  const ids = [..._historySelected];
+  const [a, b] = ids.map(id => _historyEntries.find(e => e.id === id)).filter(Boolean);
+  const panel = document.getElementById('historyCompare');
+  if (!a || !b) { panel.style.display = 'none'; return; }
+
+  const settingsKeys = Array.from(new Set([...Object.keys(a.settings || {}), ...Object.keys(b.settings || {})]));
+  const diffRows = settingsKeys
+    .filter(k => JSON.stringify(a.settings?.[k]) !== JSON.stringify(b.settings?.[k]))
+    .map(k => `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(String(a.settings?.[k]))}</td><td>${escapeHtml(String(b.settings?.[k]))}</td></tr>`)
+    .join('');
+
+  const imageCols = ['bg', 'logo', 'iconLogo', 'crop'].map(slot => {
+    const aImg = a.images?.[slot], bImg = b.images?.[slot];
+    if (!aImg && !bImg) return '';
+    return `<div class="grid2" style="margin-bottom:0;margin-top:10px">
+      <div style="text-align:center">
+        <div class="template-item-meta">${slot}</div>
+        ${aImg ? `<img src="${aImg}" alt="" style="max-width:100%;max-height:110px;object-fit:contain">` : '<div class="template-item-meta">—</div>'}
+      </div>
+      <div style="text-align:center">
+        <div class="template-item-meta">${slot}</div>
+        ${bImg ? `<img src="${bImg}" alt="" style="max-width:100%;max-height:110px;object-fit:contain">` : '<div class="template-item-meta">—</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="card">
+      <div class="card-title">Comparing batches</div>
+      ${diffRows
+        ? `<div class="table-wrap"><table><thead><tr><th>Setting</th><th>${escapeHtml(a.name)}</th><th>${escapeHtml(b.name)}</th></tr></thead><tbody>${diffRows}</tbody></table></div>`
+        : '<div class="template-empty">Settings are identical.</div>'}
+      ${imageCols}
+    </div>
+  `;
+  panel.style.display = 'block';
+}
+
+document.getElementById('historyFilter').addEventListener('input', renderHistoryListFiltered);
+document.getElementById('historyCompareBtn').addEventListener('click', renderHistoryCompare);
+
+document.getElementById('historyImportBtn').addEventListener('click', () => {
+  document.getElementById('historyImportInput').click();
+});
+document.getElementById('historyImportInput').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const entry = JSON.parse(ev.target.result);
+      if (!entry || typeof entry !== 'object' || !entry.settings || !entry.images) {
+        throw new Error('Not a valid batch file');
+      }
+      if (!entry.id) entry.id = `imported-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      if (!entry.createdAt) entry.createdAt = Date.now();
+      if (!entry.name) entry.name = entry.courseName ? `${entry.courseName} — imported` : 'Imported batch';
+      await historyPut(entry);
+      renderHistoryList();
+      await loadHistoryEntry(entry);
+    } catch (err) {
+      alert('Import failed: ' + err.message);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('historyClearBtn').addEventListener('click', async () => {
+  if (!confirm('Delete all saved batch history? This cannot be undone.')) return;
+  await historyClear();
+  renderHistoryList();
+});
+
+/* ══════════════════════════════════════════
+   TAB 5 — REJECTION REASON LIBRARY
+   Submissions become GitHub Issues (via a pre-filled link, no token);
+   the list view live-fetches public issues carrying REJECTION_LABEL.
+══════════════════════════════════════════ */
+const REPO_OWNER = 'irgendjemandkeinkorper';
+const REPO_NAME = 'course-app-image-resizer';
+const REJECTION_LABEL = 'rejection-reason';
+
+let _libraryIssues = null;
+let _libraryLoaded = false;
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ── Local "My submissions" draft tracking (localStorage only, never written back to GitHub) ── */
+const LIB_DRAFTS_KEY = 'cai_lib_drafts';
+
+function getLibDrafts() {
+  try { return JSON.parse(localStorage.getItem(LIB_DRAFTS_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function saveLibDrafts(arr) {
+  localStorage.setItem(LIB_DRAFTS_KEY, JSON.stringify(arr));
+}
+
+function renderLibDrafts() {
+  const list = document.getElementById('libDraftsList');
+  const drafts = getLibDrafts().slice().sort((a, b) => b.createdAt - a.createdAt);
+  if (!drafts.length) {
+    list.innerHTML = '<div class="template-empty">No submissions yet — logged reasons appear here after you click "Open GitHub issue to submit."</div>';
+    return;
+  }
+  list.innerHTML = '';
+  drafts.forEach(draft => {
+    const row = document.createElement('div');
+    row.className = 'template-item';
+    row.style.flexWrap = 'wrap';
+    row.innerHTML = `
+      <div style="flex:2;min-width:200px">
+        <div class="template-item-name">${escapeHtml(draft.platform)}${draft.category ? ' — ' + escapeHtml(draft.category) : ''}</div>
+        <div class="template-item-meta">${escapeHtml((draft.reason || '').slice(0, 100))}${(draft.reason || '').length > 100 ? '…' : ''}</div>
+      </div>
+      <input type="text" class="field-input" style="flex:1;min-width:160px;max-width:240px" placeholder="Paste issue URL once filed" value="${escapeHtml(draft.issueUrl || '')}" data-issue-url>
+      <select class="field-select" style="flex:0 0 130px" data-outcome>
+        <option ${draft.outcome === 'Pending' ? 'selected' : ''}>Pending</option>
+        <option ${draft.outcome === 'Overturned' ? 'selected' : ''}>Overturned</option>
+        <option ${draft.outcome === 'Upheld' ? 'selected' : ''}>Upheld</option>
+      </select>
+      <button class="danger small-btn-tight" data-del aria-label="Delete submission">✕</button>
+    `;
+    row.querySelector('[data-issue-url]').addEventListener('change', e => {
+      const arr = getLibDrafts();
+      const d = arr.find(x => x.id === draft.id);
+      if (d) { d.issueUrl = e.target.value.trim(); saveLibDrafts(arr); }
+    });
+    row.querySelector('[data-outcome]').addEventListener('change', e => {
+      const arr = getLibDrafts();
+      const d = arr.find(x => x.id === draft.id);
+      if (d) { d.outcome = e.target.value; saveLibDrafts(arr); }
+    });
+    row.querySelector('[data-del]').addEventListener('click', () => {
+      saveLibDrafts(getLibDrafts().filter(x => x.id !== draft.id));
+      renderLibDrafts();
+    });
+    list.appendChild(row);
+  });
+}
+renderLibDrafts();
+
+/* ── Fuzzy-match suggestions while typing the rejection reason ── */
+let _libSuggestTimer = null;
+document.getElementById('libReason').addEventListener('input', () => {
+  clearTimeout(_libSuggestTimer);
+  _libSuggestTimer = setTimeout(renderLibSuggestions, 300);
+});
+
+function tokenize(s) {
+  return new Set((s || '').toLowerCase().match(/[a-z0-9]+/g) || []);
+}
+
+function jaccardScore(a, b) {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+function renderLibSuggestions() {
+  const panel = document.getElementById('libSuggestions');
+  const text = document.getElementById('libReason').value.trim();
+  if (text.length < 15 || !_libraryIssues || !_libraryIssues.length) { panel.style.display = 'none'; return; }
+  const tokens = tokenize(text);
+  const scored = _libraryIssues
+    .map(issue => {
+      const sec = parseLibraryIssueBody(issue.body);
+      const reasonText = sec['rejection reason (reviewer wording)'] || issue.title;
+      return { issue, sec, score: jaccardScore(tokens, tokenize(reasonText)) };
+    })
+    .filter(x => x.score > 0.12)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  if (!scored.length) { panel.style.display = 'none'; return; }
+
+  const responseSnippet = r => r ? (r.length > 140 ? escapeHtml(r.slice(0, 140)) + '…' : escapeHtml(r)) : '';
+  panel.innerHTML = '<div class="template-item-meta" style="margin-bottom:6px">Possibly similar to existing entries:</div>' +
+    scored.map(({ issue, sec }) => `
+      <div class="template-item" style="margin-bottom:6px">
+        <div style="flex:1">
+          <div class="template-item-name" style="font-size:13px">${escapeHtml(issue.title)}</div>
+          ${sec['our response'] ? `<div class="template-item-meta">${responseSnippet(sec['our response'])}</div>` : ''}
+        </div>
+        <a href="${escapeHtml(issue.html_url)}" target="_blank" rel="noopener" style="font-size:13px">View →</a>
+      </div>
+    `).join('');
+  panel.style.display = 'block';
+}
+
+document.getElementById('libSubmitBtn').addEventListener('click', () => {
+  const st = document.getElementById('libSubmitStatus');
+  const platform = document.getElementById('libPlatform').value;
+  const category = document.getElementById('libCategory').value.trim();
+  const reason = document.getElementById('libReason').value.trim();
+  const response = document.getElementById('libResponse').value.trim();
+  const outcome = document.getElementById('libOutcome').value;
+  const submitter = document.getElementById('libSubmitter').value.trim() || 'Anonymous';
+
+  if (!reason || !response) {
+    st.textContent = 'Please fill in the reviewer wording and our response.'; st.className = 'status-bar';
+    return;
+  }
+
+  const title = `[Rejection] ${platform}${category ? ' — ' + category : ''}`;
+  const body = [
+    '### Platform', platform, '',
+    '### Category', category || '(none)', '',
+    '### Rejection reason (reviewer wording)', reason, '',
+    '### Our response', response, '',
+    '### Outcome', outcome, '',
+    '### Submitted by', submitter
+  ].join('\n');
+
+  const url = `https://github.com/${REPO_OWNER}/${REPO_NAME}/issues/new` +
+    `?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent(REJECTION_LABEL)}`;
+
+  if (body.length > 6000) {
+    st.textContent = 'Entry is long — the pre-filled link may get truncated by GitHub. Opening it anyway; add missing details directly on GitHub if needed.';
+    st.className = 'status-bar working';
+  } else {
+    st.textContent = 'Opened a pre-filled GitHub issue in a new tab — review and submit it there.';
+    st.className = 'status-bar ok';
+  }
+  window.open(url, '_blank', 'noopener');
+
+  saveLibDrafts([...getLibDrafts(), {
+    id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: Date.now(),
+    platform, category, reason, response, outcome, submitter,
+    issueUrl: null
+  }]);
+  renderLibDrafts();
+});
+
+function parseLibraryIssueBody(body) {
+  const sections = {};
+  const parts = (body || '').split(/^### /m).slice(1);
+  parts.forEach(part => {
+    const nl = part.indexOf('\n');
+    const heading = (nl === -1 ? part : part.slice(0, nl)).trim().toLowerCase();
+    const content = (nl === -1 ? '' : part.slice(nl + 1)).trim();
+    sections[heading] = content;
+  });
+  return sections;
+}
+
+async function loadRejectionLibrary(force) {
+  const st = document.getElementById('libStatus');
+  const list = document.getElementById('libList');
+  if (_libraryLoaded && !force && _libraryIssues) { renderLibraryList(); return; }
+  st.textContent = 'Loading…'; st.className = 'status-bar working';
+  try {
+    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues?labels=${encodeURIComponent(REJECTION_LABEL)}&state=all&per_page=100`;
+    const res = await fetch(url, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+    const data = await res.json();
+    _libraryIssues = data.filter(i => !i.pull_request);
+    _libraryLoaded = true;
+    st.textContent = ''; st.className = 'status-bar';
+    renderLibraryList();
+  } catch (e) {
+    _libraryLoaded = true;
+    const issuesUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/issues?q=${encodeURIComponent(`is:issue label:${REJECTION_LABEL}`)}`;
+    st.innerHTML = `Could not load the library (${escapeHtml(e.message)}). <a href="${issuesUrl}" target="_blank" rel="noopener">View directly on GitHub</a>.`;
+    st.className = 'status-bar';
+    list.innerHTML = '';
+  }
+}
+
+function renderLibraryList() {
+  const list = document.getElementById('libList');
+  const filter = (document.getElementById('libFilter').value || '').trim().toLowerCase();
+  const categoryFilter = document.getElementById('libCategoryFilter').value;
+  const issues = _libraryIssues || [];
+  const filtered = issues.filter(i => {
+    if (filter && !(i.title + ' ' + (i.body || '')).toLowerCase().includes(filter)) return false;
+    if (categoryFilter && (parseLibraryIssueBody(i.body)['category'] || '') !== categoryFilter) return false;
+    return true;
+  });
+  if (!filtered.length) {
+    list.innerHTML = `<div class="template-empty">${issues.length ? 'No entries match your filter.' : 'No entries yet — be the first to log one above.'}</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  filtered.forEach(issue => {
+    const sec = parseLibraryIssueBody(issue.body);
+    const category = sec['category'] && sec['category'] !== '(none)' ? sec['category'] : null;
+    const reason = sec['rejection reason (reviewer wording)'];
+    const response = sec['our response'];
+    const open = issue.state === 'open';
+    const row = document.createElement('div');
+    row.className = 'template-item lib-card';
+    row.innerHTML = `
+      <div class="lib-card-head">
+        <div class="template-item-name">${escapeHtml(issue.title)}</div>
+        <span style="display:flex;gap:6px;flex-shrink:0">
+          ${category ? `<span class="lib-badge" style="background:var(--bg);color:var(--text-muted);border-color:var(--border-med)">${escapeHtml(category)}</span>` : ''}
+          <span class="lib-badge" style="background:${open ? 'var(--warn-bg)' : 'var(--blue-bg)'};color:${open ? 'var(--warn)' : 'var(--blue)'};border-color:${open ? 'var(--warn)' : 'var(--blue)'}">${open ? 'unresolved' : 'resolved'}</span>
+        </span>
+      </div>
+      <div class="template-item-meta">${escapeHtml(new Date(issue.created_at).toLocaleDateString())}</div>
+      ${reason ? `<div style="margin-top:8px;font-size:13px"><strong>Reason:</strong> ${escapeHtml(reason)}</div>` : ''}
+      ${response ? `<div style="margin-top:4px;font-size:13px"><strong>Response:</strong> ${escapeHtml(response)}</div>` : ''}
+      <a href="${escapeHtml(issue.html_url)}" target="_blank" rel="noopener" style="font-size:13px;margin-top:7px;display:inline-block">View on GitHub →</a>
+    `;
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('libRefreshBtn').addEventListener('click', () => loadRejectionLibrary(true));
+document.getElementById('libFilter').addEventListener('input', renderLibraryList);
+document.getElementById('libCategoryFilter').addEventListener('change', renderLibraryList);
 </script>
 </body>
 </html>
