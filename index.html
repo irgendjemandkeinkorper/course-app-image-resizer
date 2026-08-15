@@ -392,6 +392,18 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
         </div>
       </div>
       <div class="btn-group">
+        <label for="resizePreset" class="ctrl-label" style="margin:0">Preset</label>
+        <select id="resizePreset" class="field-select" style="width:auto;padding:8px 10px">
+          <option value="custom">Custom selection</option>
+          <option value="hero">Hero</option>
+          <option value="thumbnail">Thumbnail</option>
+          <option value="course-card">Course card</option>
+        </select>
+        <label for="exportFormat" class="ctrl-label" style="margin:0">Format</label>
+        <select id="exportFormat" class="field-select" style="width:auto;padding:8px 10px">
+          <option value="png">PNG</option>
+          <option value="webp">WebP</option>
+        </select>
         <button id="exportSelBtn" disabled>Export selected as zip</button>
         <button id="exportAllBtn" class="primary" disabled>Export all as zip</button>
       </div>
@@ -676,6 +688,13 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
 const SIZE_LIMIT = 4 * 1024 * 1024;
 let lastEncodeInfo = { mode: 'truecolor', width: 0, height: 0, quantized: false, downscaled: false };
 
+function encodeWebP(canvas, quality = 0.92) {
+  return new Promise((resolve, reject) => canvas.toBlob(blob => {
+    if (!blob) { reject(new Error('This browser cannot encode WebP images.')); return; }
+    blob.arrayBuffer().then(buffer => resolve(new Uint8Array(buffer)), reject);
+  }, 'image/webp', quality));
+}
+
 if (!window.JSZip || !window.UPNG || !window.pako) {
   const dependencyStatus = document.getElementById('statusMsg');
   dependencyStatus.textContent = 'Export libraries could not be loaded. Refresh the page or restore the vendor files.';
@@ -731,8 +750,10 @@ function hexToRgb(h) {
 
 /* ── Web Worker for off-thread PNG encoding ── */
 const _workerUPNG = new URL('vendor/UPNG.js', document.baseURI).href;
+const _workerPako = new URL('vendor/pako.min.js', document.baseURI).href;
 const _workerSrc = `
-importScripts(${JSON.stringify(_workerUPNG)});
+self.window = self;
+importScripts(${JSON.stringify(_workerPako)}, ${JSON.stringify(_workerUPNG)});
 const _SZ = 4194304;
 function _enc(buf, w, h, q) { return UPNG.encode([buf], w, h, q); }
 function _scale(buf, w, h, s) {
@@ -1135,6 +1156,11 @@ const SIZES = [
   {name:'App Row',         w:1150, h:322,  file:'app-row'},
 ];
 const LARGE = ['XXHDPI','XXXHDPI','Tablet 2X'];
+const RESIZE_PRESETS = {
+  hero: ['HDPI', 'XHDPI', 'XXHDPI', 'XXXHDPI'],
+  thumbnail: ['1X', '2X', '3X'],
+  'course-card': ['Scorecard', 'App Row']
+};
 
 let bgImg = null, logoImg = null, activeIdx = 0, gradDir = 'to bottom';
 let splashFitMode = 'fill'; // 'fill' | 'fit'
@@ -1310,6 +1336,7 @@ async function runSplashExport(indices, zipSuffix) {
   const courseName = requireCourseName('statusMsg');
   if (!courseName) return;
   const zipName = `${courseName}-${zipSuffix}.zip`;
+  const format = document.getElementById('exportFormat').value;
   setSplashStatus('working', 'Rendering images…');
   showSplashProgress(true);
   document.getElementById('largeNote').style.display = 'none';
@@ -1327,11 +1354,10 @@ async function runSplashExport(indices, zipSuffix) {
     const off = document.createElement('canvas');
     off.width = s.w; off.height = s.h; // Set dimensions explicitly since drawSplash no longer does
     drawSplash(off, s.w, s.h);
-    const pngCheck = UPNG.encode([off.getContext('2d').getImageData(0,0,off.width,off.height).data.buffer], off.width, off.height, 0);
-    if (pngCheck.byteLength > SIZE_LIMIT) largeFound = true;
-    const bytes = await encodePNGCompressed(off);
+    const bytes = format === 'webp' ? await encodeWebP(off) : await encodePNGCompressed(off);
+    if (bytes.byteLength > SIZE_LIMIT) largeFound = true;
     if (lastEncodeInfo.quantized || lastEncodeInfo.downscaled) largeFound = true;
-    files.push({ name: s.file + '.png', bytes });
+    files.push({ name: s.file + `.${format}`, bytes });
     await new Promise(r => setTimeout(r, 10));
   }
 
@@ -1437,6 +1463,15 @@ document.querySelectorAll('.dir-btn').forEach(btn => {
 });
 
 buildTable();
+document.getElementById('resizePreset').addEventListener('change', e => {
+  const names = RESIZE_PRESETS[e.target.value];
+  if (!names) return;
+  document.querySelectorAll('.chk').forEach(input => {
+    input.checked = names.includes(SIZES[Number(input.dataset.i)].name);
+  });
+  document.getElementById('checkAll').checked = false;
+  document.querySelectorAll('#tbody tr').forEach(row => row.classList.toggle('active-row', row.querySelector('.chk')?.checked));
+});
 
 /* ══════════════════════════════════════════
    TAB 2 — APP ICON & COURSE LOGO

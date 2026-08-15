@@ -25,3 +25,9 @@ jobs:
 
       - name: HTML Lint
         run: npm run lint
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke and accessibility check
+        run: npm run test:browser
