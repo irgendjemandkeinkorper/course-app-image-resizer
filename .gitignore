@@ -1,3 +1,5 @@
 
 # WSL metadata
 *:Zone.Identifier
+.claude/worktrees/
+node_modules/
