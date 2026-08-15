@@ -35,7 +35,7 @@ The current release loads JSZip, pako, and UPNG.js from pinned CDN URLs, so expo
 
 - `index.html` — the live single-file application.
 - `greensward-design-system/` — design-token source and style guide.
-- `design_handoff_course_app_resizer/` — read-only handoff reference.
+- `design_handoff_course_app_resizer/` — read-only handoff reference snapshot; it is intentionally not kept byte-identical to the live app.
 - `vault/` — durable architecture, decision, and gotcha notes.
 - `DESIGN-SYSTEM-PROMPT.md` and `WP-THEME-PROMPT.md` — reference-only prompt-engineering notes, not runtime documentation.
 

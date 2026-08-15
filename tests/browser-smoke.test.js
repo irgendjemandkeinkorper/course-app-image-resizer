@@ -13,7 +13,8 @@ const root = path.resolve(__dirname, '..');
 function startServer() {
   const server = http.createServer((req, res) => {
     const requested = decodeURIComponent(req.url.split('?')[0]);
-    const file = path.resolve(root, requested === '/' ? 'index.html' : requested.slice(1));
+    const relative = requested === '/' ? 'index.html' : requested === '/favicon.ico' ? 'favicon.svg' : requested.slice(1);
+    const file = path.resolve(root, relative);
     if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       res.writeHead(404); res.end(); return;
     }
@@ -67,6 +68,11 @@ test('all tabs load cleanly and a splash export creates a ZIP', async t => {
   const logoPng = await zip.file('main-logo.png').async('nodebuffer');
   assert.equal(iconPng[25], 2, 'app-icon.png must be RGB without alpha');
   assert.notEqual(logoPng[25], 2, 'main-logo.png must retain a non-RGB transparency-capable encoding');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('[data-tab="crop"]').click();
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone viewport must not overflow horizontally');
+  await page.setViewportSize({ width: 768, height: 1024 });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'tablet viewport must not overflow horizontally');
   assert.deepEqual(errors, [], `browser errors: ${errors.join('; ')}`);
   if (axeFindings.size) console.warn(`Accessibility follow-ups observed: ${[...axeFindings].sort().join(', ')}`);
 });
