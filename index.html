@@ -9,9 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
+<!-- Pinned local copies are vendored for offline operation; update package.json and these files together. -->
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/pako.min.js"></script>
+<script src="vendor/UPNG.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* ══════════════════════════════════════════════════════════════════════
@@ -673,6 +674,14 @@ button.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
    SHARED UTILITIES
 ══════════════════════════════════════════ */
 const SIZE_LIMIT = 4 * 1024 * 1024;
+let lastEncodeInfo = { mode: 'truecolor', width: 0, height: 0, quantized: false, downscaled: false };
+
+if (!window.JSZip || !window.UPNG || !window.pako) {
+  const dependencyStatus = document.getElementById('statusMsg');
+  dependencyStatus.textContent = 'Export libraries could not be loaded. Refresh the page or restore the vendor files.';
+  dependencyStatus.className = 'status-bar err';
+  document.querySelectorAll('#exportSelBtn,#exportAllBtn,#iconExportBtn,#cropExportBtn').forEach(btn => { btn.disabled = true; });
+}
 
 function loadImg(file, cb, onError) {
   const r = new FileReader();
@@ -721,8 +730,9 @@ function hexToRgb(h) {
 }
 
 /* ── Web Worker for off-thread PNG encoding ── */
+const _workerUPNG = new URL('vendor/UPNG.js', document.baseURI).href;
 const _workerSrc = `
-importScripts('https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js');
+importScripts(${JSON.stringify(_workerUPNG)});
 const _SZ = 4194304;
 function _enc(buf, w, h, q) { return UPNG.encode([buf], w, h, q); }
 function _scale(buf, w, h, s) {
@@ -738,20 +748,20 @@ function _scale(buf, w, h, s) {
 self.onmessage = function(e) {
   const { id, buf, w, h } = e.data;
   let bytes = _enc(buf, w, h, 0);
-  if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes }, [bytes]); return; }
+  if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes, width: w, height: h, mode: 'truecolor' }, [bytes]); return; }
   for (const q of [256, 128, 64]) {
     bytes = _enc(buf, w, h, q);
-    if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes }, [bytes]); return; }
+    if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes, width: w, height: h, mode: 'quantized' }, [bytes]); return; }
   }
   for (let si = 9; si >= 5; si--) {
     const sc = _scale(buf, w, h, si / 10);
     if (!sc) break;
     bytes = _enc(sc.buf, sc.w, sc.h, 128);
-    if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes }, [bytes]); return; }
+    if (bytes.byteLength <= _SZ) { self.postMessage({ id, bytes, width: sc.w, height: sc.h, mode: 'quantized+downscaled' }, [bytes]); return; }
   }
   const fb = _scale(buf, w, h, 0.5);
   bytes = fb ? _enc(fb.buf, fb.w, fb.h, 64) : _enc(buf, w, h, 64);
-  self.postMessage({ id, bytes }, [bytes]);
+  self.postMessage({ id, bytes, width: fb ? fb.w : w, height: fb ? fb.h : h, mode: 'quantized+downscaled' }, [bytes]);
 };
 `;
 
@@ -759,9 +769,9 @@ let _worker = null, _pending = new Map(), _wid = 0, _wFailed = false;
 try {
   _worker = new Worker(URL.createObjectURL(new Blob([_workerSrc], { type: 'text/javascript' })));
   _worker.onmessage = e => {
-    const { id, bytes } = e.data;
+    const { id, bytes, width, height, mode } = e.data;
     const res = _pending.get(id); _pending.delete(id);
-    if (res) res(bytes ? new Uint8Array(bytes) : null);
+    if (res) res(bytes ? { bytes: new Uint8Array(bytes), width, height, mode } : null);
   };
   _worker.onerror = () => {
     _wFailed = true;
@@ -778,7 +788,10 @@ async function encodePNGCompressed(canvas) {
       _pending.set(id, res);
       _worker.postMessage({ id, buf, w: canvas.width, h: canvas.height }, [buf]);
     });
-    if (result) return result;
+    if (result) {
+      lastEncodeInfo = { mode: result.mode, width: result.width, height: result.height, quantized: result.mode.includes('quantized'), downscaled: result.mode.includes('downscaled') };
+      return result.bytes;
+    }
     _wFailed = true; // fall through to sync
   }
   // Synchronous fallback (also used if worker unavailable)
@@ -787,10 +800,11 @@ async function encodePNGCompressed(canvas) {
     return UPNG.encode([d.data.buffer], c.width, c.height, cnum);
   }
   let bytes = enc(canvas, 0);
+  lastEncodeInfo = { mode: 'truecolor', width: canvas.width, height: canvas.height, quantized: false, downscaled: false };
   if (bytes.byteLength <= SIZE_LIMIT) return new Uint8Array(bytes);
   for (const cnum of [256, 128, 64]) {
     bytes = enc(canvas, cnum);
-    if (bytes.byteLength <= SIZE_LIMIT) return new Uint8Array(bytes);
+    if (bytes.byteLength <= SIZE_LIMIT) { lastEncodeInfo = { mode: 'quantized', width: canvas.width, height: canvas.height, quantized: true, downscaled: false }; return new Uint8Array(bytes); }
     await new Promise(r => setTimeout(r, 0));
   }
   for (let s = 0.9; s >= 0.5; s -= 0.1) {
@@ -798,12 +812,13 @@ async function encodePNGCompressed(canvas) {
     sc.width = Math.round(canvas.width * s); sc.height = Math.round(canvas.height * s);
     sc.getContext('2d').drawImage(canvas, 0, 0, sc.width, sc.height);
     bytes = enc(sc, 128);
-    if (bytes.byteLength <= SIZE_LIMIT) return new Uint8Array(bytes);
+    if (bytes.byteLength <= SIZE_LIMIT) { lastEncodeInfo = { mode: 'quantized+downscaled', width: sc.width, height: sc.height, quantized: true, downscaled: true }; return new Uint8Array(bytes); }
     await new Promise(r => setTimeout(r, 0));
   }
   const fb = document.createElement('canvas');
   fb.width = Math.round(canvas.width * 0.5); fb.height = Math.round(canvas.height * 0.5);
   fb.getContext('2d').drawImage(canvas, 0, 0, fb.width, fb.height);
+  lastEncodeInfo = { mode: 'quantized+downscaled', width: fb.width, height: fb.height, quantized: true, downscaled: true };
   return new Uint8Array(enc(fb, 64));
 }
 
@@ -1315,6 +1330,7 @@ async function runSplashExport(indices, zipSuffix) {
     const pngCheck = UPNG.encode([off.getContext('2d').getImageData(0,0,off.width,off.height).data.buffer], off.width, off.height, 0);
     if (pngCheck.byteLength > SIZE_LIMIT) largeFound = true;
     const bytes = await encodePNGCompressed(off);
+    if (lastEncodeInfo.quantized || lastEncodeInfo.downscaled) largeFound = true;
     files.push({ name: s.file + '.png', bytes });
     await new Promise(r => setTimeout(r, 10));
   }
@@ -1339,8 +1355,14 @@ async function runSplashExport(indices, zipSuffix) {
   setSplashStatus('working', 'Building zip…'); setSplashProgress(94);
   await downloadZip(files, zipName);
   setSplashProgress(100); setTimeout(() => showSplashProgress(false), 700);
-  setSplashStatus('ok', `Done — ${files.length} file${files.length !== 1 ? 's' : ''} saved to ${zipName}`);
-  if (largeFound) document.getElementById('largeNote').style.display = 'block';
+  setSplashStatus(largeFound ? 'working' : 'ok', largeFound
+    ? `Done — ${files.length} files saved to ${zipName}; compression may have changed color mode or dimensions (${lastEncodeInfo.width}×${lastEncodeInfo.height}).`
+    : `Done — ${files.length} file${files.length !== 1 ? 's' : ''} saved to ${zipName}`);
+  if (largeFound) {
+    const note = document.getElementById('largeNote');
+    note.textContent = `⚠ Export compressed using ${lastEncodeInfo.mode} and may be ${lastEncodeInfo.width}×${lastEncodeInfo.height}. Review the final dimensions before upload.`;
+    note.style.display = 'block';
+  }
   saveHistoryEntry('splash');
 }
 
@@ -1475,7 +1497,10 @@ document.getElementById('iconExportBtn').addEventListener('click', async () => {
   const b1 = encodeOpaquePNG(c1); // store-safe: RGB, no alpha channel
   const b2 = await encodePNGCompressed(c2); // main-logo keeps transparency by design
   await downloadZip([{ name: 'app-icon.png', bytes: b1 }, { name: 'main-logo.png', bytes: b2 }], `${courseName}-icons.zip`);
-  btn.disabled = false; st.textContent = `Exported ${courseName}-icons.zip`; st.className = 'status-bar ok';
+  btn.disabled = false;
+  const degraded = lastEncodeInfo.quantized || lastEncodeInfo.downscaled;
+  st.textContent = degraded ? `Exported ${courseName}-icons.zip; ${lastEncodeInfo.mode} at ${lastEncodeInfo.width}×${lastEncodeInfo.height}.` : `Exported ${courseName}-icons.zip`;
+  st.className = degraded ? 'status-bar working' : 'status-bar ok';
   saveHistoryEntry('icons');
 });
 
@@ -1682,7 +1707,9 @@ document.getElementById('cropExportBtn').addEventListener('click', async () => {
   const bytes = await encodePNGCompressed(out);
   const filename = `${courseName}-header-600x200.png`;
   downloadBlob(bytes, filename);
-  st.textContent = `Exported ${filename}`; st.className = 'status-bar ok';
+  const degraded = lastEncodeInfo.quantized || lastEncodeInfo.downscaled;
+  st.textContent = degraded ? `Exported ${filename}; ${lastEncodeInfo.mode} at ${lastEncodeInfo.width}×${lastEncodeInfo.height}.` : `Exported ${filename}`;
+  st.className = degraded ? 'status-bar working' : 'status-bar ok';
   saveHistoryEntry('crop');
 });
 
@@ -1779,6 +1806,15 @@ async function saveHistoryEntry(source) {
     }
     if (document.getElementById('tab-history').classList.contains('active')) renderHistoryList();
   } catch (e) {
+    const statusId = { splash: 'statusMsg', icons: 'iconStatus', crop: 'cropStatus' }[source];
+    const status = statusId && document.getElementById(statusId);
+    const quotaFailure = e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota|storage/i.test(e.message || ''));
+    if (status) {
+      status.textContent = quotaFailure
+        ? 'Export succeeded, but browser storage is full; this export was not added to history.'
+        : 'Export succeeded, but history could not be saved in this browser.';
+      status.className = 'status-bar working';
+    }
     console.warn('History auto-save skipped:', e);
   }
 }
@@ -2043,9 +2079,17 @@ document.getElementById('historyClearBtn').addEventListener('click', async () =>
    Submissions become GitHub Issues (via a pre-filled link, no token);
    the list view live-fetches public issues carrying REJECTION_LABEL.
 ══════════════════════════════════════════ */
-const REPO_OWNER = 'irgendjemandkeinkorper';
-const REPO_NAME = 'course-app-image-resizer';
-const REJECTION_LABEL = 'rejection-reason';
+/* Deployment config: forks should change these values to their own public issue repository. */
+const COURSE_APP_CONFIG = {
+  repoOwner: 'irgendjemandkeinkorper',
+  repoName: 'course-app-image-resizer',
+  rejectionLabel: 'rejection-reason'
+};
+const REPO_OWNER = COURSE_APP_CONFIG.repoOwner;
+const REPO_NAME = COURSE_APP_CONFIG.repoName;
+const REJECTION_LABEL = COURSE_APP_CONFIG.rejectionLabel;
+const LIBRARY_CACHE_KEY = 'cai_rejection_library_cache';
+const LIBRARY_CACHE_TTL = 15 * 60 * 1000;
 
 let _libraryIssues = null;
 let _libraryLoaded = false;
@@ -2220,22 +2264,52 @@ async function loadRejectionLibrary(force) {
   const st = document.getElementById('libStatus');
   const list = document.getElementById('libList');
   if (_libraryLoaded && !force && _libraryIssues) { renderLibraryList(); return; }
+  if (!force) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(LIBRARY_CACHE_KEY) || 'null');
+      if (cached && Array.isArray(cached.issues)) {
+        _libraryIssues = cached.issues;
+        _libraryLoaded = true;
+        st.textContent = `Showing cached library from ${new Date(cached.savedAt).toLocaleString()}.`;
+        st.className = 'status-bar working';
+        renderLibraryList();
+        if (Date.now() - cached.savedAt < LIBRARY_CACHE_TTL) return;
+      }
+    } catch (e) { /* malformed cache is disposable */ }
+  }
   st.textContent = 'Loading…'; st.className = 'status-bar working';
   try {
     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues?labels=${encodeURIComponent(REJECTION_LABEL)}&state=all&per_page=100`;
     const res = await fetch(url, { headers: { Accept: 'application/vnd.github+json' } });
-    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+    if (!res.ok) {
+      const reset = Number(res.headers.get('X-RateLimit-Reset'));
+      const retryMinutes = reset ? Math.max(1, Math.ceil((reset * 1000 - Date.now()) / 60000)) : null;
+      throw new Error(res.status === 403
+        ? `GitHub API rate limit reached${retryMinutes ? `; try again in about ${retryMinutes} minute${retryMinutes === 1 ? '' : 's'}` : ''}`
+        : `GitHub API returned ${res.status}`);
+    }
     const data = await res.json();
     _libraryIssues = data.filter(i => !i.pull_request);
     _libraryLoaded = true;
+    try { localStorage.setItem(LIBRARY_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), issues: _libraryIssues })); } catch (e) { /* cache is best effort */ }
     st.textContent = ''; st.className = 'status-bar';
     renderLibraryList();
   } catch (e) {
     _libraryLoaded = true;
     const issuesUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/issues?q=${encodeURIComponent(`is:issue label:${REJECTION_LABEL}`)}`;
-    st.innerHTML = `Could not load the library (${escapeHtml(e.message)}). <a href="${issuesUrl}" target="_blank" rel="noopener">View directly on GitHub</a>.`;
-    st.className = 'status-bar';
-    list.innerHTML = '';
+    const rateLimited = e && /403|rate limit/i.test(e.message || '');
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(LIBRARY_CACHE_KEY) || 'null'); } catch (cacheError) { /* ignore */ }
+    if (cached && Array.isArray(cached.issues)) {
+      _libraryIssues = cached.issues;
+      st.innerHTML = `${rateLimited ? 'GitHub temporarily rate-limited this library request.' : 'Could not refresh the library.'} Showing cached data from ${new Date(cached.savedAt).toLocaleString()}. <a href="${issuesUrl}" target="_blank" rel="noopener">View directly on GitHub</a>.`;
+      st.className = 'status-bar working';
+      renderLibraryList();
+    } else {
+      st.innerHTML = `${rateLimited ? 'The rejection library is temporarily unavailable because GitHub rate-limited this browser.' : `Could not load the library (${escapeHtml(e.message)}).`} <a href="${issuesUrl}" target="_blank" rel="noopener">View directly on GitHub</a>.`;
+      st.className = 'status-bar err';
+      list.innerHTML = '';
+    }
   }
 }
 
