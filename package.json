@@ -13,7 +13,7 @@
     "htmlhint": "1.9.2",
     "jszip": "3.10.1",
     "pako": "2.1.0",
-    "playwright": "^1.55.0",
+    "playwright": "^1.62.1",
     "upng-js": "2.1.0"
   }
 }
