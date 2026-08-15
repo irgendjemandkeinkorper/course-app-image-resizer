@@ -702,6 +702,27 @@ if (!window.JSZip || !window.UPNG || !window.pako) {
   document.querySelectorAll('#exportSelBtn,#exportAllBtn,#iconExportBtn,#cropExportBtn').forEach(btn => { btn.disabled = true; });
 }
 
+function describeExportError(error) {
+  const message = String(error?.message || error || 'Unknown export error');
+  if (/webp/i.test(message)) return 'This browser cannot encode WebP images. Choose PNG or use a current browser.';
+  if (/quota|storage/i.test(message)) return 'Export failed because browser storage is full. Clear space and try again.';
+  if (/worker|upng|jszip|pako|load/i.test(message)) return 'An export dependency could not be loaded. Refresh the page and try again.';
+  return `Export failed: ${message}`;
+}
+
+window.addEventListener('unhandledrejection', event => {
+  const active = document.querySelector('.page.active');
+  const statusId = active?.id === 'tab-icons' ? 'iconStatus' : active?.id === 'tab-crop' ? 'cropStatus' : 'statusMsg';
+  const status = document.getElementById(statusId);
+  if (status) { status.textContent = describeExportError(event.reason); status.className = 'status-bar err'; }
+  if (statusId === 'statusMsg') showSplashProgress(false);
+  document.getElementById('exportAllBtn').disabled = !bgImg;
+  document.getElementById('exportSelBtn').disabled = !bgImg;
+  document.getElementById('iconExportBtn').disabled = !iconLogoImg;
+  document.getElementById('cropExportBtn').disabled = !cropImg;
+  event.preventDefault();
+});
+
 function loadImg(file, cb, onError) {
   const r = new FileReader();
   r.onerror = () => onError && onError('Could not read the file.');

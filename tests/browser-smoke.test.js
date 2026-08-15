@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 const { AxeBuilder } = require('@axe-core/playwright');
+const JSZip = require('jszip');
 const { makePng } = require('./png-fixtures');
 
 const root = path.resolve(__dirname, '..');
@@ -55,6 +56,17 @@ test('all tabs load cleanly and a splash export creates a ZIP', async t => {
     page.locator('#exportSelBtn').click()
   ]);
   assert.match(download.suggestedFilename(), /smoke-course-app-images-selected\.zip$/i);
+  await page.locator('[data-tab="icons"]').click();
+  await page.locator('#iconLogoInput').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: makePng(8, 4, 6, [40, 100, 60, 128]) });
+  const [iconDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#iconExportBtn').click()
+  ]);
+  const zip = await JSZip.loadAsync(fs.readFileSync(await iconDownload.path()));
+  const iconPng = await zip.file('app-icon.png').async('nodebuffer');
+  const logoPng = await zip.file('main-logo.png').async('nodebuffer');
+  assert.equal(iconPng[25], 2, 'app-icon.png must be RGB without alpha');
+  assert.notEqual(logoPng[25], 2, 'main-logo.png must retain a non-RGB transparency-capable encoding');
   assert.deepEqual(errors, [], `browser errors: ${errors.join('; ')}`);
   if (axeFindings.size) console.warn(`Accessibility follow-ups observed: ${[...axeFindings].sort().join(', ')}`);
 });
