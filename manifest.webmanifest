@@ -1,0 +1,9 @@
+{
+  "name": "Course App Resizer",
+  "short_name": "App Resizer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#faf8f3",
+  "theme_color": "#3f6a43",
+  "icons": [{"src":"favicon.svg","sizes":"any","type":"image/svg+xml"}]
+}

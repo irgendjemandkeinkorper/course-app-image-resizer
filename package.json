@@ -1,0 +1,16 @@
+{
+  "name": "course-app-image-resizer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static browser-based image exporter for course app assets",
+  "scripts": {
+    "lint": "htmlhint index.html --rules tag-pair=true,spec-char-escape=false && node lint-check.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "htmlhint": "1.9.2",
+    "jszip": "3.10.1",
+    "pako": "2.1.0",
+    "upng-js": "2.1.0"
+  }
+}

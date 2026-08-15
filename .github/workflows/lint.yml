@@ -20,8 +20,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: HTML Lint
-        run: npx htmlhint index.html --rules "tag-pair=true,spec-char-escape=false"
+      - name: Install pinned dependencies
+        run: npm ci
 
-      - name: JS Syntax Check
-        run: node lint-check.js
+      - name: HTML Lint
+        run: npm run lint
