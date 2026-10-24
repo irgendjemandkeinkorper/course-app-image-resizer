@@ -9,7 +9,7 @@
     "test:browser": "node --test tests/browser-smoke.test.js"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.2",
+    "@axe-core/playwright": "^4.14.0",
     "htmlhint": "1.9.2",
     "jszip": "3.10.1",
     "pako": "2.1.0",
